@@ -6,11 +6,11 @@ on:
 
 jobs:
 
-  linux:
+  test_linux:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v1
-    - uses: actions/setup-python@v1
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
       with:
         python-version: '3.x'
     - run: pip install meson ninja
@@ -24,11 +24,11 @@ jobs:
         name: Linux_Meson_Testlog
         path: builddir/meson-logs/testlog.txt
 
-  macos:
+  test-macos:
     runs-on: macos-latest
     steps:
-    - uses: actions/checkout@v1
-    - uses: actions/setup-python@v1
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
       with:
         python-version: '3.x'
     - run: brew install gcc
@@ -43,11 +43,11 @@ jobs:
         name: MacOS_Meson_Testlog
         path: builddir/meson-logs/testlog.txt
 
-  windows:
+  test-windows:
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@v1
-    - uses: actions/setup-python@v1
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
       with:
         python-version: '3.x'
     - run: pip install meson ninja
@@ -61,9 +61,9 @@ jobs:
         name: Windows_Meson_Testlog
         path: builddir/meson-logs/testlog.txt
 
-  linux_arm:
+  test-linux_arm:
     runs-on: ubuntu-latest
-    name: Build on ubuntu_latest armv7
+    name: Test project with meson with linux at arm architecture.
     steps:
       - uses: actions/checkout@v3
       - uses: uraimo/run-on-arch-action@v2
