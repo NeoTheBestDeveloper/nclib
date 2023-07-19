@@ -1,0 +1,14 @@
+---
+repos:
+  - repo: https://github.com/commitizen-tools/commitizen
+    rev: 3.4.0
+    hooks:
+      - id: commitizen
+        stages: [commit-msg]
+
+  - repo: local
+    hooks:
+      - id: test
+        name: run tests with meson
+        entry: make test
+        language: system
