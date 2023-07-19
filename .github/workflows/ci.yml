@@ -62,7 +62,7 @@ jobs:
         path: builddir/meson-logs/testlog.txt
 
   linux_arm:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     name: Build on ubuntu_latest armv7
     steps:
       - uses: actions/checkout@v3
