@@ -1,4 +1,4 @@
-name: CI Pipeline for neosql-core.
+name: CI Pipeline for nclib.
 
 on:
   - push
@@ -17,7 +17,7 @@ jobs:
     - run: meson setup -Db_sanitize=address,undefined builddir/
       env:
         CC: gcc
-    - run: "meson test neosql-core: -C builddir/ -v"
+    - run: "meson test nclib: -C builddir/ -v"
     - uses: actions/upload-artifact@v1
       if: failure()
       with:
@@ -36,7 +36,7 @@ jobs:
     - run: meson setup builddir/
       env:
         CC: gcc
-    - run: "meson test neosql-core: -C builddir/ -v"
+    - run: "meson test nclib: -C builddir/ -v"
     - uses: actions/upload-artifact@v1
       if: failure()
       with:
@@ -54,7 +54,7 @@ jobs:
     - run: meson setup builddir/
       env:
         CC: gcc
-    - run: "meson test neosql-core: -C builddir/ -v"
+    - run: "meson test nclib: -C builddir/ -v"
     - uses: actions/upload-artifact@v1
       if: failure()
       with:
