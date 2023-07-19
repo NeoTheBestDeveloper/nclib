@@ -4,6 +4,7 @@
 #include <criterion/new/assert.h>
 
 #include "nclib.h"
+#include "nclib/stream.h"
 
 /* be and le payload layout:
  | 1 byte | 2 bytes   | 4 bytes | 8 bytes | ....
@@ -17,13 +18,13 @@
 u8 be_payload[] = {
     0x9c, 0xff, 0x9c, 0xff, 0xff, 0xff, 0x9c, 0xff, 0xff, 0xff, 0xff,
     0xff, 0xff, 0xff, 0x9c, 0xe4, 0x80, 0x64, 0x80, 0x00, 0x00, 0x64,
-    0xf3, 0x33, 0x33, 0x33, 0x33, 0x33, 0x33, 0x3e, 0x7f, 0x7f, 0xff,
+    0x80, 0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x64, 0x7f, 0x7f, 0xff,
     0xff, 0x7f, 0xef, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x0,  0x1,
 };
 u8 le_payload[] = {
     0x9c, 0x9c, 0xff, 0x9c, 0xff, 0xff, 0xff, 0x9c, 0xff, 0xff, 0xff,
     0xff, 0xff, 0xff, 0xff, 0xe4, 0x64, 0x80, 0x64, 0x0,  0x0,  0x80,
-    0x3e, 0x33, 0x33, 0x33, 0x33, 0x33, 0x33, 0xf3, 0xff, 0xff, 0x7f,
+    0x64, 0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x80, 0xff, 0xff, 0x7f,
     0x7f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xef, 0x7f, 0x0,  0x1,
 };
 u8 void_payload[] = {
@@ -260,4 +261,197 @@ Test(TestStream, test_read_le_i32)
     cr_assert(eq(u32, res.status, STREAM_OK));
     cr_assert(eq(u64, res.readen, sizeof num));
     cr_assert(eq(i32, num, i32_expected));
+}
+
+Test(TestStream, test_read_be_f32)
+{
+    u8* payload_start = be_payload + f32_offset;
+    const u64 payload_size = sizeof be_payload - f32_offset;
+
+    Stream s = stream_new(payload_start, payload_size, STREAM_BIG_ENDIAN);
+
+    f32 num;
+    StreamResult res = stream_read_f32(&s, &num);
+
+    cr_assert(eq(u32, res.status, STREAM_OK));
+    cr_assert(eq(u64, res.readen, sizeof num));
+    cr_assert(eq(flt, num, f32_expected));
+}
+
+Test(TestStream, test_read_le_f32)
+{
+    u8* payload_start = le_payload + f32_offset;
+    const u64 payload_size = sizeof le_payload - f32_offset;
+
+    Stream s = stream_new(payload_start, payload_size, STREAM_LITTLE_ENDIAN);
+
+    f32 num;
+    StreamResult res = stream_read_f32(&s, &num);
+
+    cr_assert(eq(u32, res.status, STREAM_OK));
+    cr_assert(eq(u64, res.readen, sizeof num));
+    cr_assert(eq(flt, num, f32_expected));
+}
+
+Test(TestStream, test_read_be_f64)
+{
+    u8* payload_start = be_payload + f64_offset;
+    const u64 payload_size = sizeof be_payload - f64_offset;
+
+    Stream s = stream_new(payload_start, payload_size, STREAM_BIG_ENDIAN);
+
+    f64 num;
+    StreamResult res = stream_read_f64(&s, &num);
+
+    cr_assert(eq(u32, res.status, STREAM_OK));
+    cr_assert(eq(u64, res.readen, sizeof num));
+    cr_assert(eq(dbl, num, f64_expected));
+}
+
+Test(TestStream, test_read_le_f64)
+{
+    u8* payload_start = le_payload + f64_offset;
+    const u64 payload_size = sizeof le_payload - f64_offset;
+
+    Stream s = stream_new(payload_start, payload_size, STREAM_LITTLE_ENDIAN);
+
+    f64 num;
+    StreamResult res = stream_read_f64(&s, &num);
+
+    cr_assert(eq(u32, res.status, STREAM_OK));
+    cr_assert(eq(u64, res.readen, sizeof num));
+    cr_assert(eq(dbl, num, f64_expected));
+}
+
+Test(TestStream, test_read_be_u64)
+{
+    u8* payload_start = be_payload + u64_offset;
+    const u64 payload_size = sizeof be_payload - u64_offset;
+
+    Stream s = stream_new(payload_start, payload_size, STREAM_BIG_ENDIAN);
+
+    u64 num;
+    StreamResult res = stream_read_u64(&s, &num);
+
+    cr_assert(eq(u32, res.status, STREAM_OK));
+    cr_assert(eq(u64, res.readen, sizeof num));
+    cr_assert(eq(u64, num, u64_expected));
+}
+
+Test(TestStream, test_read_le_u64)
+{
+    u8* payload_start = le_payload + u64_offset;
+    const u64 payload_size = sizeof le_payload - u64_offset;
+
+    Stream s = stream_new(payload_start, payload_size, STREAM_LITTLE_ENDIAN);
+
+    u64 num;
+    StreamResult res = stream_read_u64(&s, &num);
+
+    cr_assert(eq(u32, res.status, STREAM_OK));
+    cr_assert(eq(u64, res.readen, sizeof num));
+    cr_assert(eq(u64, num, u64_expected));
+}
+
+Test(TestStream, test_read_be_i64)
+{
+    u8* payload_start = be_payload + i64_offset;
+    const u64 payload_size = sizeof be_payload - i64_offset;
+
+    Stream s = stream_new(payload_start, payload_size, STREAM_BIG_ENDIAN);
+
+    i64 num;
+    StreamResult res = stream_read_i64(&s, &num);
+
+    cr_assert(eq(u32, res.status, STREAM_OK));
+    cr_assert(eq(u64, res.readen, sizeof num));
+    cr_assert(eq(i64, num, i64_expected));
+}
+
+Test(TestStream, test_read_le_i64)
+{
+    u8* payload_start = le_payload + i64_offset;
+    const u64 payload_size = sizeof le_payload - i64_offset;
+
+    Stream s = stream_new(payload_start, payload_size, STREAM_LITTLE_ENDIAN);
+
+    i64 num;
+    StreamResult res = stream_read_i64(&s, &num);
+
+    cr_assert(eq(u32, res.status, STREAM_OK));
+    cr_assert(eq(u64, res.readen, sizeof num));
+    cr_assert(eq(i64, num, i64_expected));
+}
+
+Test(TestStream, test_read_be_bool1)
+{
+    u8* payload_start = be_payload + bool1_offset;
+    const u64 payload_size = sizeof be_payload - bool1_offset;
+
+    Stream s = stream_new(payload_start, payload_size, STREAM_BIG_ENDIAN);
+
+    bool flag;
+    StreamResult res = stream_read_bool(&s, &flag);
+
+    cr_assert(eq(u32, res.status, STREAM_OK));
+    cr_assert(eq(u64, res.readen, sizeof flag));
+    cr_assert(flag == bool1_expected);
+}
+
+Test(TestStream, test_read_le_bool1)
+{
+    u8* payload_start = le_payload + bool1_offset;
+    const u64 payload_size = sizeof le_payload - bool1_offset;
+
+    Stream s = stream_new(payload_start, payload_size, STREAM_LITTLE_ENDIAN);
+
+    bool flag;
+    StreamResult res = stream_read_bool(&s, &flag);
+
+    cr_assert(eq(u32, res.status, STREAM_OK));
+    cr_assert(eq(u64, res.readen, sizeof flag));
+    cr_assert(flag == bool1_expected);
+}
+
+Test(TestStream, test_read_be_bool2)
+{
+    u8* payload_start = be_payload + bool2_offset;
+    const u64 payload_size = sizeof be_payload - bool2_offset;
+
+    Stream s = stream_new(payload_start, payload_size, STREAM_BIG_ENDIAN);
+
+    bool flag;
+    StreamResult res = stream_read_bool(&s, &flag);
+
+    cr_assert(eq(u32, res.status, STREAM_OK));
+    cr_assert(eq(u64, res.readen, sizeof flag));
+    cr_assert(flag == bool2_expected);
+}
+
+Test(TestStream, test_read_le_bool2)
+{
+    u8* payload_start = le_payload + bool2_offset;
+    const u64 payload_size = sizeof le_payload - bool2_offset;
+
+    Stream s = stream_new(payload_start, payload_size, STREAM_LITTLE_ENDIAN);
+
+    bool flag;
+    StreamResult res = stream_read_bool(&s, &flag);
+
+    cr_assert(eq(u32, res.status, STREAM_OK));
+    cr_assert(eq(u64, res.readen, sizeof flag));
+    cr_assert(flag == bool2_expected);
+}
+
+Test(TestStream, test_read_void)
+{
+    Stream s
+        = stream_new(void_payload, sizeof void_payload, STREAM_BIG_ENDIAN);
+
+    u8 buf[sizeof void_payload];
+    StreamResult res = stream_read_void(&s, buf, sizeof void_payload);
+
+    cr_assert(eq(u32, res.status, STREAM_OK));
+    cr_assert(eq(u64, res.readen, sizeof void_payload));
+    cr_assert_arr_eq(buf, void_payload, sizeof void_payload);
 }

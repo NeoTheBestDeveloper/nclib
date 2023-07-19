@@ -17,16 +17,16 @@ typedef struct {
     StreamResultStatus status;
 } StreamResult;
 
-typedef StreamResult (*Stream_read_two_bytes_type)(void*, u8*);
-typedef StreamResult (*Stream_read_four_bytes_type)(void*, u8*);
+typedef StreamResult (*Stream_read_bytes_type)(void*, u8*);
 
 typedef struct {
     u8* buf;
     u64 size;
     u64 offset;
 
-    Stream_read_two_bytes_type _stream_read_two_bytes_impl;
-    Stream_read_four_bytes_type _stream_read_four_bytes_impl;
+    Stream_read_bytes_type _stream_read_two_bytes_impl;
+    Stream_read_bytes_type _stream_read_four_bytes_impl;
+    Stream_read_bytes_type _stream_read_eight_bytes_impl;
 } Stream;
 
 Stream stream_new(void* buf, u64 buf_size, StreamEndian buf_endian);
@@ -39,3 +39,12 @@ StreamResult stream_read_i16(Stream* stream, i16* num);
 
 StreamResult stream_read_u32(Stream* stream, u32* num);
 StreamResult stream_read_i32(Stream* stream, i32* num);
+
+StreamResult stream_read_u64(Stream* stream, u64* num);
+StreamResult stream_read_i64(Stream* stream, i64* num);
+
+StreamResult stream_read_f32(Stream* stream, f32* num);
+StreamResult stream_read_f64(Stream* stream, f64* num);
+
+StreamResult stream_read_bool(Stream* stream, bool* flag);
+StreamResult stream_read_void(Stream* stream, void* bytes, u64 size);
