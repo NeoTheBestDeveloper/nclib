@@ -1,14 +1,8 @@
 name: CI Pipeline for neosql-core.
 
 on:
-  push:
-    paths:
-      - "**.c"
-      - "**.h"
-  pull_request:
-    paths:
-      - "**.c"
-      - "**.h"
+  - push
+  - pull_request
 
 jobs:
 
