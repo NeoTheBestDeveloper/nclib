@@ -4,13 +4,12 @@ project('nclib', 'c',
   license: 'MIT',
   default_options: [
     'warning_level=everything',
-    'c_std=c17',
+    'c_std=c2x',
     'buildtype=debug',
     'optimization=2',
     'b_lundef=false',
     'strip=true',
     'default_library=both',
-    'b_lto=true',
 ])
 
 subdir('src')
