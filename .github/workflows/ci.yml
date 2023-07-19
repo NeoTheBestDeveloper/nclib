@@ -80,7 +80,7 @@ jobs:
           setup: |
             sudo apt-get update -q -y
             sudo apt-get install -q -y git gcc python3
-            sudo pip3 install meson --break-system-packages
+            sudo pip3 install meson
             git clone https://github.com/NeoTheBestDeveloper/nclib
             cd nclib 
             git checkout v0.1.0
