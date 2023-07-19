@@ -6,7 +6,7 @@ on:
 
 jobs:
 
-  test_linux:
+  test-linux:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
@@ -78,12 +78,13 @@ jobs:
           githubToken: ${{ github.token }}
 
           setup: |
-            apt-get update -q -y
-            apt-get install -q -y git meson gcc
+            sudo apt-get update -q -y
+            sudo apt-get install -q -y git meson gcc
             git clone https://github.com/NeoTheBestDeveloper/nclib
             cd nclib 
             git checkout v0.1.0
-            
+            meson setup build
+
 
           run: |
             meson test nclib: -C build
