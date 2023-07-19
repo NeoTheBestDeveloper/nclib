@@ -7,3 +7,8 @@ dev-mingw:
 
 test-mingw:
 	meson test nclib: -C build-mingw
+
+test-sanitizer:
+	meson setup -Db_sanitize=address,undefined --wipe build-sanitizer
+	meson compile -j 8 -C build-sanitizer
+	meson test nclib: -C build-sanitizer

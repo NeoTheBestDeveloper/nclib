@@ -2,7 +2,7 @@
 
 ## Goals
 
-- [ ] Better type aliases.
+- [x] Better type aliases.
 - [ ] Stream
 - [ ] Arena Allocator
 - [ ] Str
