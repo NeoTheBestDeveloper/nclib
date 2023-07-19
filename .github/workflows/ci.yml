@@ -63,7 +63,6 @@ jobs:
 
   test-linux_arm:
     runs-on: ubuntu-latest
-    name: Test project with meson with linux at arm architecture.
     steps:
       - uses: actions/checkout@v3
       - uses: uraimo/run-on-arch-action@v2

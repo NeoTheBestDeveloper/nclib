@@ -3,8 +3,6 @@
 #include <criterion/criterion.h>
 #include <criterion/new/assert.h>
 
-#include "criterion/assert.h"
-#include "criterion/internal/assert.h"
 #include "nclib.h"
 
 /* be and le payload layout:
@@ -142,4 +140,124 @@ Test(TestStream, test_read_out_of_range)
     }
 
     // TODO: Check with u64 num
+}
+
+Test(TestStream, test_read_be_u16)
+{
+    u8* payload_start = be_payload + u16_offset;
+    const u64 payload_size = sizeof be_payload - u16_offset;
+
+    Stream s = stream_new(payload_start, payload_size, STREAM_BIG_ENDIAN);
+
+    u16 num;
+    StreamResult res = stream_read_u16(&s, &num);
+
+    cr_assert(eq(u32, res.status, STREAM_OK));
+    cr_assert(eq(u64, res.readen, sizeof num));
+    cr_assert(eq(u16, num, u16_expected));
+}
+
+Test(TestStream, test_read_le_u16)
+{
+    u8* payload_start = le_payload + u16_offset;
+    const u64 payload_size = sizeof le_payload - u16_offset;
+
+    Stream s = stream_new(payload_start, payload_size, STREAM_LITTLE_ENDIAN);
+
+    u16 num;
+    StreamResult res = stream_read_u16(&s, &num);
+
+    cr_assert(eq(u32, res.status, STREAM_OK));
+    cr_assert(eq(u64, res.readen, sizeof num));
+    cr_assert(eq(u16, num, u16_expected));
+}
+
+Test(TestStream, test_read_be_i16)
+{
+    u8* payload_start = be_payload + i16_offset;
+    const u64 payload_size = sizeof be_payload - i16_offset;
+
+    Stream s = stream_new(payload_start, payload_size, STREAM_BIG_ENDIAN);
+
+    i16 num;
+    StreamResult res = stream_read_i16(&s, &num);
+
+    cr_assert(eq(u32, res.status, STREAM_OK));
+    cr_assert(eq(u64, res.readen, sizeof num));
+    cr_assert(eq(i16, num, i16_expected));
+}
+
+Test(TestStream, test_read_le_i16)
+{
+    u8* payload_start = le_payload + i16_offset;
+    const u64 payload_size = sizeof le_payload - i16_offset;
+
+    Stream s = stream_new(payload_start, payload_size, STREAM_LITTLE_ENDIAN);
+
+    i16 num;
+    StreamResult res = stream_read_i16(&s, &num);
+
+    cr_assert(eq(u32, res.status, STREAM_OK));
+    cr_assert(eq(u64, res.readen, sizeof num));
+    cr_assert(eq(i16, num, i16_expected));
+}
+
+Test(TestStream, test_read_be_u32)
+{
+    u8* payload_start = be_payload + u32_offset;
+    const u64 payload_size = sizeof be_payload - u32_offset;
+
+    Stream s = stream_new(payload_start, payload_size, STREAM_BIG_ENDIAN);
+
+    u32 num;
+    StreamResult res = stream_read_u32(&s, &num);
+
+    cr_assert(eq(u32, res.status, STREAM_OK));
+    cr_assert(eq(u64, res.readen, sizeof num));
+    cr_assert(eq(u32, num, u32_expected));
+}
+
+Test(TestStream, test_read_le_u32)
+{
+    u8* payload_start = le_payload + u32_offset;
+    const u64 payload_size = sizeof le_payload - u32_offset;
+
+    Stream s = stream_new(payload_start, payload_size, STREAM_LITTLE_ENDIAN);
+
+    u32 num;
+    StreamResult res = stream_read_u32(&s, &num);
+
+    cr_assert(eq(u32, res.status, STREAM_OK));
+    cr_assert(eq(u64, res.readen, sizeof num));
+    cr_assert(eq(u32, num, u32_expected));
+}
+
+Test(TestStream, test_read_be_i32)
+{
+    u8* payload_start = be_payload + i32_offset;
+    const u64 payload_size = sizeof be_payload - i32_offset;
+
+    Stream s = stream_new(payload_start, payload_size, STREAM_BIG_ENDIAN);
+
+    i32 num;
+    StreamResult res = stream_read_i32(&s, &num);
+
+    cr_assert(eq(u32, res.status, STREAM_OK));
+    cr_assert(eq(u64, res.readen, sizeof num));
+    cr_assert(eq(i32, num, i32_expected));
+}
+
+Test(TestStream, test_read_le_i32)
+{
+    u8* payload_start = le_payload + i32_offset;
+    const u64 payload_size = sizeof le_payload - i32_offset;
+
+    Stream s = stream_new(payload_start, payload_size, STREAM_LITTLE_ENDIAN);
+
+    i32 num;
+    StreamResult res = stream_read_i32(&s, &num);
+
+    cr_assert(eq(u32, res.status, STREAM_OK));
+    cr_assert(eq(u64, res.readen, sizeof num));
+    cr_assert(eq(i32, num, i32_expected));
 }
