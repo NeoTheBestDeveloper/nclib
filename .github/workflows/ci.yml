@@ -86,3 +86,6 @@ jobs:
             git checkout v0.1.0
             meson setup build
             meson test nclib: -C build
+
+          run: |
+            echo "Succes"
