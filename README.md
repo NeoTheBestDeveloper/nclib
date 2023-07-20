@@ -3,7 +3,7 @@
 ## Goals
 
 - [x] Better type aliases.
-- [ ] Stream
+- [x] Stream
 - [ ] Arena Allocator
 - [ ] Str
 - [ ] Hash Table
