@@ -56,7 +56,8 @@ add_project_arguments(cc.get_supported_arguments('-DCHECK_BOUND'), language: 'c'
 incdir = include_directories('include')
 libnclib = both_libraries('nclib', 
                 nclib_src, 
-                include_directories: incdir)
+                include_directories: incdir
+)
 
 nclib = declare_dependency(
 	include_directories: [incdir],
