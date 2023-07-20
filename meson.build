@@ -59,7 +59,5 @@ nclib = library('nclib',
                 include_directories: incdir)
 
 
-if get_option('buildtype') != 'release'
-  libcriterion = subproject('libcriterion')
-  subdir('tests')
-endif
+libcriterion = subproject('libcriterion')
+subdir('tests')
