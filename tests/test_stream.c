@@ -317,7 +317,7 @@ Test(TestStream, test_read_void)
     cr_assert_arr_eq(buf, void_payload, sizeof void_payload);
 }
 
-Test(TestStream, test_get_stream_pos)
+Test(TestStream, test_stream_tell)
 {
     Stream s = stream_new(be_payload, sizeof be_payload, STREAM_BIG_ENDIAN);
 
@@ -336,29 +336,32 @@ Test(TestStream, test_get_stream_pos)
     cr_assert(eq(u64, stream_tell(&s), 15));
 }
 
-// Test(TestStream, test_stream_seek)
-// {
-//     Stream s
-//         = stream_new(void_payload, sizeof void_payload, STREAM_BIG_ENDIAN);
-//     stream_seek(&s, 2, STREAM_START);
-//
-//     u8 res;
-//     stream_read_u8(&s, &res);
-//
-//     cr_assert(eq(u8, res, void_payload[2]));
-//
-//     stream_seek(&s, -2, STREAM_CURR);
-//     cr_assert(eq(u8, res, void_payload[1]));
-//
-//     stream_seek(&s, 1, STREAM_END);
-//     cr_assert(eq(u8, res, void_payload[(sizeof void_payload) - 1]));
-//
-//     stream_seek(&s, 2, STREAM_END);
-//     cr_assert(eq(u8, res, void_payload[(sizeof void_payload) - 2]));
-//
-//     // TODO: Finish.
-// }
-//
+Test(TestStream, test_stream_seek)
+{
+    Stream s
+        = stream_new(void_payload, sizeof void_payload, STREAM_BIG_ENDIAN);
+    stream_seek(&s, 2, STREAM_START);
+
+    u8 res = stream_read_u8(&s);
+    cr_assert(eq(u8, res, void_payload[2]));
+
+    stream_seek(&s, -2, STREAM_CURR);
+    res = stream_read_u8(&s);
+    cr_assert(eq(u8, res, void_payload[1]));
+
+    stream_seek(&s, 1, STREAM_END);
+    res = stream_read_u8(&s);
+    cr_assert(eq(u8, res, void_payload[(sizeof void_payload) - 1]));
+
+    stream_seek(&s, 2, STREAM_END);
+    res = stream_read_u8(&s);
+    cr_assert(eq(u8, res, void_payload[(sizeof void_payload) - 2]));
+
+    stream_seek(&s, 1, STREAM_START);
+    res = stream_read_u8(&s);
+    cr_assert(eq(u8, res, void_payload[1]));
+}
+
 Test(TestStream, test_stream_write_be_u8)
 {
     u8 buf[100];

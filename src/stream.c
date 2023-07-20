@@ -153,3 +153,18 @@ static inline void stream_write_reverse_bytes(Stream* stream, const u8* src,
 u64 stream_tell(const Stream* stream) { return stream->offset; }
 u64 stream_size(const Stream* stream) { return stream->size; }
 const u8* stream_raw(const Stream* stream) { return stream->buf; }
+
+u64 stream_seek(Stream* stream, i64 offset, StreamWhence whence)
+{
+    if (whence == STREAM_START) {
+        stream->offset = offset;
+    }
+    else if (whence == STREAM_CURR) {
+        stream->offset = stream->offset + offset;
+    }
+    else {
+        stream->offset = stream->size - offset;
+    }
+
+    return stream->offset;
+}
