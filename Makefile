@@ -15,3 +15,7 @@ test-sanitizer:
 
 clean:
 	rm -rf build build-mingw build-sanitizer
+
+release:
+	meson setup --buildtype=release --reconfigure build_release
+	meson dist -C build_release
