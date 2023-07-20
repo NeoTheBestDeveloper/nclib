@@ -3,9 +3,7 @@
 #include <criterion/criterion.h>
 #include <criterion/new/assert.h>
 
-#include "criterion/assert.h"
 #include "nclib.h"
-#include "nclib/stream.h"
 
 /* be and le payload layout:
  | 1 byte | 2 bytes   | 4 bytes | 8 bytes | ....
@@ -28,9 +26,13 @@ u8 le_payload[] = {
     0x64, 0x0,  0x0,  0x0,  0x0,  0x0,  0x0,  0x80, 0xff, 0xff, 0x7f,
     0x7f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xef, 0x7f, 0x0,  0x1,
 };
-u8 void_payload[] = {
-    0x2, 0x3, 0x20, 0x64, 0x80, 0x96,
-};
+u8 void_payload[] = { 0x2, 0x3, 0x20, 0x64, 0x80, 0x96 };
+
+u8 le_addr[] = { 0x64, 0x0, 0x0, 0x0, 0xea, 0x0 };
+u8 be_addr[] = { 0x0, 0x0, 0x0, 0x64, 0x0, 0xea };
+
+const i32 page_id_expected = 100;
+const i16 offset_expected = 234;
 
 const u8 u8_expected = 156; // 2^8  - 100
 const u16 u16_expected = 65436; // 2^16 - 100
@@ -604,4 +606,49 @@ Test(TestStream, test_stream_write_void)
 
     stream_write_bytes(&s, void_payload, sizeof void_payload);
     cr_assert_arr_eq(void_payload, stream_raw(&s), sizeof void_payload);
+}
+
+typedef struct {
+    i32 page_id;
+    i16 offset;
+} Addr;
+
+Addr stream_read_addr(Stream* stream)
+{
+    Addr res;
+    stream->_stream_read_bytes_impl(stream, (u8*)&(res.page_id),
+                                    sizeof res.page_id);
+    stream->_stream_read_bytes_impl(stream, (u8*)&(res.offset),
+                                    sizeof res.offset);
+    return res;
+}
+
+void stream_write_addr(Stream* stream, Addr addr)
+{
+    stream->_stream_write_bytes_impl(stream, (u8*)&(addr.page_id),
+                                     sizeof addr.page_id);
+    stream->_stream_write_bytes_impl(stream, (u8*)&(addr.offset),
+                                     sizeof addr.offset);
+}
+
+Test(TestStream, test_stream_extend_types)
+{
+    Stream s = stream_new(be_addr, sizeof be_addr, STREAM_BIG_ENDIAN);
+
+    Addr res = stream_read_addr(&s);
+
+    cr_assert(eq(i32, res.page_id, page_id_expected));
+    cr_assert(eq(i16, res.offset, offset_expected));
+
+    s = stream_new(le_addr, sizeof le_addr, STREAM_LITTLE_ENDIAN);
+
+    res = stream_read_addr(&s);
+
+    cr_assert(eq(i32, res.page_id, page_id_expected));
+    cr_assert(eq(i16, res.offset, offset_expected));
+
+    u8 buf[sizeof le_addr];
+    s = stream_new(buf, sizeof buf, STREAM_LITTLE_ENDIAN);
+    stream_write_addr(&s, res);
+    cr_assert_arr_eq(buf, le_addr, sizeof le_addr);
 }

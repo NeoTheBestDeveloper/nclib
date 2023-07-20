@@ -13,7 +13,6 @@ typedef enum {
     STREAM_END = 2,
 } StreamWhence;
 
-// TODO: Add my own types for stream operations.
 typedef struct Stream Stream;
 typedef void (*Stream_read_bytes_type)(Stream*, u8*, u64);
 typedef void (*Stream_write_bytes_type)(Stream*, const u8*, u64);

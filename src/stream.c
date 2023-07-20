@@ -1,21 +1,29 @@
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 #include "nclib/stream.h"
 
-// TODO: Disable stream_check_bound by compilation flag.
-static void stream_check_bound(const Stream* stream, u64 offset_differance)
-{
-    if (stream->offset + offset_differance > stream->size) {
-        fprintf(stderr,
-                "Error: stream access out of bound at %s:%d. Size=%ld, access "
-                "by index=%ld.\n",
-                __FILE__, __LINE__, stream->size,
-                stream->offset + offset_differance);
-        exit(EXIT_FAILURE);
+#ifdef CHECK_BOUND
+
+#include <stdio.h>
+#include <stdlib.h>
+#undef stream_check_bound
+
+#define stream_check_bound(_stream_, _offset_differance_)                     \
+    if (_stream_->offset + _offset_differance_ > _stream_->size) {            \
+        fprintf(                                                              \
+            stderr,                                                           \
+            "Error: stream access out of bound at %s:%d. Size=%ld, access "   \
+            "by index=%ld.\n",                                                \
+            __FILE__, __LINE__, _stream_->size,                               \
+            _stream_->offset + _offset_differance_);                          \
+        exit(EXIT_FAILURE);                                                   \
     }
-}
+
+#else
+
+#define stream_check_bound(_stream, _offset_differance_)
+
+#endif // endif !CHECK_BOUND
 
 #define STREAM_READ_GEN(_type_)                                               \
     _type_ stream_read_##_type_(Stream* stream)                               \
