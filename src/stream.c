@@ -1,368 +1,147 @@
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "nclib/stream.h"
 
-#define CHECK_BOUND(_stream_, _size_)                                         \
-    if (_stream_->offset + _size_ > _stream_->size) {                         \
-        return STREAM_OUT_OF_RANGE_ERROR;                                     \
+// TODO: Disable stream_check_bound by compilation flag.
+static void stream_check_bound(const Stream* stream, u64 offset_differance)
+{
+    if (stream->offset + offset_differance > stream->size) {
+        fprintf(stderr,
+                "Error: stream access out of bound at %s:%d. Size=%ld, access "
+                "by index=%ld.\n",
+                __FILE__, __LINE__, stream->size,
+                stream->offset + offset_differance);
+        exit(EXIT_FAILURE);
+    }
+}
+
+#define STREAM_READ_GEN(_type_)                                               \
+    _type_ stream_read_##_type_(Stream* stream)                               \
+    {                                                                         \
+        _type_ buf;                                                           \
+        stream->_stream_read_bytes_impl(stream, (u8*)(&buf), sizeof buf);     \
+        return buf;                                                           \
+    }
+
+#define STREAM_WRITE_GEN(_type_)                                              \
+    void stream_write_##_type_(Stream* stream, _type_ buf)                    \
+    {                                                                         \
+        stream->_stream_write_bytes_impl(stream, (u8*)(&buf), sizeof buf);    \
     }
 
 // PRIVATE METHODS.
 // READ.
-static Stream_read_bytes_type
-stream_find_read_bytes_impl(StreamEndian buf_endian, u64 size);
-
-static inline StreamResult stream_read_straight_bytes(Stream* stream, u8* dst,
-                                                      u64 size);
-static inline StreamResult stream_read_reverse_bytes(Stream* stream, u8* dst,
-                                                     u64 size);
-
-static StreamResult stream_straight_read_two_bytes(void* stream, u8* dst);
-static StreamResult stream_reverse_read_two_bytes(void* stream, u8* dst);
-
-static StreamResult stream_straight_read_four_bytes(void* stream, u8* dst);
-static StreamResult stream_reverse_read_four_bytes(void* stream, u8* dst);
-
-static StreamResult stream_straight_read_eight_bytes(void* stream, u8* dst);
-static StreamResult stream_reverse_read_eight_bytes(void* stream, u8* dst);
+static Stream_read_bytes_type stream_find_read_bytes_impl(StreamEndian endian);
+static inline void stream_read_straight_bytes(Stream* stream, u8* dst,
+                                              u64 size);
+static inline void stream_read_reverse_bytes(Stream* stream, u8* dst,
+                                             u64 size);
 
 // WRITE.
 static Stream_write_bytes_type
-stream_find_write_bytes_impl(StreamEndian buf_endian, u64 size);
-
-static inline StreamResult
-stream_write_straight_bytes(Stream* stream, const u8* src, u64 size);
-static inline StreamResult stream_write_reverse_bytes(Stream* stream,
-                                                      const u8* src, u64 size);
-
-static StreamResult stream_straight_write_two_bytes(void* stream,
-                                                    const u8* src);
-static StreamResult stream_reverse_write_two_bytes(void* stream,
-                                                   const u8* src);
-
-static StreamResult stream_straight_write_four_bytes(void* stream,
-                                                     const u8* src);
-static StreamResult stream_reverse_write_four_bytes(void* stream,
-                                                    const u8* src);
-
-static StreamResult stream_straight_write_eight_bytes(void* stream,
-                                                      const u8* src);
-static StreamResult stream_reverse_write_eight_bytes(void* stream,
-                                                     const u8* src);
+stream_find_write_bytes_impl(StreamEndian endian);
+static inline void stream_write_straight_bytes(Stream* stream, const u8* src,
+                                               u64 size);
+static inline void stream_write_reverse_bytes(Stream* stream, const u8* src,
+                                              u64 size);
 
 // PUBLIC METHODS.
-Stream stream_new(void* buf, u64 buf_size, StreamEndian buf_endian)
+Stream stream_new(void* buf, u64 buf_size, StreamEndian endian)
 {
     return (Stream) {
         .buf = (u8*)buf,
         .size = buf_size,
         .offset = 0,
 
-        ._stream_read_two_bytes_impl
-        = stream_find_read_bytes_impl(buf_endian, 2),
-        ._stream_read_four_bytes_impl
-        = stream_find_read_bytes_impl(buf_endian, 4),
-        ._stream_read_eight_bytes_impl
-        = stream_find_read_bytes_impl(buf_endian, 8),
-
-        ._stream_write_two_bytes_impl
-        = stream_find_write_bytes_impl(buf_endian, 2),
-        ._stream_write_four_bytes_impl
-        = stream_find_write_bytes_impl(buf_endian, 4),
-        ._stream_write_eight_bytes_impl
-        = stream_find_write_bytes_impl(buf_endian, 8),
+        ._stream_read_bytes_impl = stream_find_read_bytes_impl(endian),
+        ._stream_write_bytes_impl = stream_find_write_bytes_impl(endian),
     };
 }
 
-StreamResult stream_read_u8(Stream* stream, u8* num)
+STREAM_READ_GEN(u8)
+STREAM_READ_GEN(i8)
+STREAM_READ_GEN(u16)
+STREAM_READ_GEN(i16)
+STREAM_READ_GEN(u32)
+STREAM_READ_GEN(i32)
+STREAM_READ_GEN(u64)
+STREAM_READ_GEN(i64)
+STREAM_READ_GEN(f32)
+STREAM_READ_GEN(f64)
+STREAM_READ_GEN(bool)
+
+void stream_read_bytes(Stream* stream, u8* bytes, u64 size)
 {
-    CHECK_BOUND(stream, sizeof *num);
-    return stream_read_straight_bytes(stream, (u8*)num, 1);
+    stream_read_straight_bytes(stream, bytes, size);
 }
 
-StreamResult stream_read_i8(Stream* stream, i8* num)
-{
-    CHECK_BOUND(stream, sizeof *num);
-    return stream_read_straight_bytes(stream, (u8*)num, 1);
-}
+STREAM_WRITE_GEN(u8)
+STREAM_WRITE_GEN(i8)
+STREAM_WRITE_GEN(u16)
+STREAM_WRITE_GEN(i16)
+STREAM_WRITE_GEN(u32)
+STREAM_WRITE_GEN(i32)
+STREAM_WRITE_GEN(u64)
+STREAM_WRITE_GEN(i64)
+STREAM_WRITE_GEN(f32)
+STREAM_WRITE_GEN(f64)
+STREAM_WRITE_GEN(bool)
 
-StreamResult stream_read_u16(Stream* stream, u16* num)
+void stream_write_bytes(Stream* stream, const u8* bytes, u64 size)
 {
-    CHECK_BOUND(stream, sizeof *num);
-    return stream->_stream_read_two_bytes_impl(stream, (u8*)num);
-}
-
-StreamResult stream_read_i16(Stream* stream, i16* num)
-{
-    CHECK_BOUND(stream, sizeof *num);
-    return stream->_stream_read_two_bytes_impl(stream, (u8*)num);
-}
-
-StreamResult stream_read_u32(Stream* stream, u32* num)
-{
-    CHECK_BOUND(stream, sizeof *num);
-    return stream->_stream_read_four_bytes_impl(stream, (u8*)num);
-}
-
-StreamResult stream_read_i32(Stream* stream, i32* num)
-{
-    CHECK_BOUND(stream, sizeof *num);
-    return stream->_stream_read_four_bytes_impl(stream, (u8*)num);
-}
-
-StreamResult stream_read_f32(Stream* stream, f32* num)
-{
-    CHECK_BOUND(stream, sizeof *num);
-    return stream->_stream_read_four_bytes_impl(stream, (u8*)num);
-}
-
-StreamResult stream_read_f64(Stream* stream, f64* num)
-{
-    CHECK_BOUND(stream, sizeof *num);
-    return stream->_stream_read_eight_bytes_impl(stream, (u8*)num);
-}
-
-StreamResult stream_read_u64(Stream* stream, u64* num)
-{
-    CHECK_BOUND(stream, sizeof *num);
-    return stream->_stream_read_eight_bytes_impl(stream, (u8*)num);
-}
-
-StreamResult stream_read_i64(Stream* stream, i64* num)
-{
-    CHECK_BOUND(stream, sizeof *num);
-    return stream->_stream_read_eight_bytes_impl(stream, (u8*)num);
-}
-
-StreamResult stream_read_bool(Stream* stream, bool* flag)
-{
-    CHECK_BOUND(stream, sizeof *flag);
-    return stream_read_straight_bytes(stream, (u8*)flag, 1);
-}
-
-StreamResult stream_read_void(Stream* stream, void* bytes, u64 size)
-{
-    CHECK_BOUND(stream, size);
-    return stream_read_straight_bytes(stream, (u8*)bytes, size);
-}
-
-u64 stream_pos(const Stream* stream) { return stream->offset; }
-u64 stream_size(const Stream* stream) { return stream->size; }
-const u8* stream_raw(const Stream* stream) { return stream->buf; }
-
-StreamResult stream_write_u8(Stream* stream, const u8* num)
-{
-    CHECK_BOUND(stream, sizeof *num);
-    return stream_write_straight_bytes(stream, num, 1);
-}
-
-StreamResult stream_write_i8(Stream* stream, const i8* num)
-{
-    CHECK_BOUND(stream, sizeof *num);
-    return stream_write_straight_bytes(stream, (const u8*)num, 1);
-}
-
-StreamResult stream_write_u16(Stream* stream, const u16* num)
-{
-    CHECK_BOUND(stream, sizeof *num);
-    return stream->_stream_write_two_bytes_impl((Stream*)stream,
-                                                (const u8*)num);
-}
-
-StreamResult stream_write_i16(Stream* stream, const i16* num)
-{
-    CHECK_BOUND(stream, sizeof *num);
-    return stream->_stream_write_two_bytes_impl((Stream*)stream,
-                                                (const u8*)num);
-}
-
-StreamResult stream_write_u32(Stream* stream, const u32* num)
-{
-    CHECK_BOUND(stream, sizeof *num);
-    return stream->_stream_write_four_bytes_impl((Stream*)stream,
-                                                 (const u8*)num);
-}
-
-StreamResult stream_write_i32(Stream* stream, const i32* num)
-{
-    CHECK_BOUND(stream, sizeof *num);
-    return stream->_stream_write_four_bytes_impl((Stream*)stream,
-                                                 (const u8*)num);
-}
-
-StreamResult stream_write_f32(Stream* stream, const f32* num)
-{
-    CHECK_BOUND(stream, sizeof *num);
-    return stream->_stream_write_four_bytes_impl((Stream*)stream,
-                                                 (const u8*)num);
-}
-
-StreamResult stream_write_f64(Stream* stream, const f64* num)
-{
-    CHECK_BOUND(stream, sizeof *num);
-    return stream->_stream_write_eight_bytes_impl((Stream*)stream,
-                                                  (const u8*)num);
-}
-
-StreamResult stream_write_u64(Stream* stream, const u64* num)
-{
-    CHECK_BOUND(stream, sizeof *num);
-    return stream->_stream_write_eight_bytes_impl((Stream*)stream,
-                                                  (const u8*)num);
-}
-
-StreamResult stream_write_i64(Stream* stream, const i64* num)
-{
-    CHECK_BOUND(stream, sizeof *num);
-    return stream->_stream_write_eight_bytes_impl((Stream*)stream,
-                                                  (const u8*)num);
-}
-
-StreamResult stream_write_bool(Stream* stream, const bool* flag)
-{
-    CHECK_BOUND(stream, sizeof *flag);
-    return stream_write_straight_bytes(stream, (const u8*)flag, 1);
-}
-
-StreamResult stream_write_void(Stream* stream, const void* bytes, u64 size)
-{
-    CHECK_BOUND(stream, size);
-    return stream_write_straight_bytes(stream, bytes, size);
+    stream_write_straight_bytes(stream, bytes, size);
 }
 
 // PRIVATE METHODS.
-static Stream_read_bytes_type
-stream_find_read_bytes_impl(StreamEndian buf_endian, u64 size)
+static Stream_read_bytes_type stream_find_read_bytes_impl(StreamEndian endian)
 {
-    if (size == 2) {
-        return buf_endian == MACHINE_ENDIAN ? stream_straight_read_two_bytes
-                                            : stream_reverse_read_two_bytes;
-    }
-
-    if (size == 4) {
-        return buf_endian == MACHINE_ENDIAN ? stream_straight_read_four_bytes
-                                            : stream_reverse_read_four_bytes;
-    }
-
-    return buf_endian == MACHINE_ENDIAN ? stream_straight_read_eight_bytes
-                                        : stream_reverse_read_eight_bytes;
+    return endian == MACHINE_ENDIAN ? stream_read_straight_bytes
+                                    : stream_read_reverse_bytes;
 }
 
-static StreamResult stream_straight_read_two_bytes(void* stream, u8* num)
+static inline void stream_read_straight_bytes(Stream* stream, u8* dst,
+                                              u64 size)
 {
-    return stream_read_straight_bytes((Stream*)stream, num, 2);
-}
-
-static StreamResult stream_reverse_read_two_bytes(void* stream, u8* num)
-{
-    return stream_read_reverse_bytes((Stream*)stream, num, 2);
-}
-
-static inline StreamResult stream_read_straight_bytes(Stream* stream, u8* dst,
-                                                      u64 size)
-{
+    stream_check_bound(stream, size);
     memcpy(dst, stream->buf + stream->offset, size);
     stream->offset += size;
-
-    return STREAM_OK;
 }
 
-static inline StreamResult stream_read_reverse_bytes(Stream* stream, u8* dst,
-                                                     u64 size)
+static inline void stream_read_reverse_bytes(Stream* stream, u8* dst, u64 size)
 {
+    stream_check_bound(stream, size);
     for (u64 i = stream->offset; i < stream->offset + size; ++i) {
         dst[size - (i - stream->offset) - 1] = stream->buf[i];
     }
     stream->offset += size;
-
-    return STREAM_OK;
-}
-
-static StreamResult stream_straight_read_four_bytes(void* stream, u8* num)
-{
-    return stream_read_straight_bytes((Stream*)stream, num, 4);
-}
-
-static StreamResult stream_reverse_read_four_bytes(void* stream, u8* num)
-{
-    return stream_read_reverse_bytes((Stream*)stream, num, 4);
-}
-
-static StreamResult stream_straight_read_eight_bytes(void* stream, u8* num)
-{
-    return stream_read_straight_bytes((Stream*)stream, num, 8);
-}
-
-static StreamResult stream_reverse_read_eight_bytes(void* stream, u8* num)
-{
-    return stream_read_reverse_bytes((Stream*)stream, num, 8);
 }
 
 static Stream_write_bytes_type
-stream_find_write_bytes_impl(StreamEndian buf_endian, u64 size)
+stream_find_write_bytes_impl(StreamEndian endian)
 {
-    if (size == 2) {
-        return buf_endian == MACHINE_ENDIAN ? stream_straight_write_two_bytes
-                                            : stream_reverse_write_two_bytes;
-    }
-
-    if (size == 4) {
-        return buf_endian == MACHINE_ENDIAN ? stream_straight_write_four_bytes
-                                            : stream_reverse_write_four_bytes;
-    }
-
-    return buf_endian == MACHINE_ENDIAN ? stream_straight_write_eight_bytes
-                                        : stream_reverse_write_eight_bytes;
+    return endian == MACHINE_ENDIAN ? stream_write_straight_bytes
+                                    : stream_write_reverse_bytes;
 }
 
-static inline StreamResult stream_write_straight_bytes(Stream* stream,
-                                                       const u8* src, u64 size)
+static inline void stream_write_straight_bytes(Stream* stream, const u8* src,
+                                               u64 size)
 {
+    stream_check_bound(stream, size);
     memcpy(stream->buf + stream->offset, src, size);
     stream->offset += size;
-    return STREAM_OK;
 }
 
-static inline StreamResult stream_write_reverse_bytes(Stream* stream,
-                                                      const u8* src, u64 size)
+static inline void stream_write_reverse_bytes(Stream* stream, const u8* src,
+                                              u64 size)
 {
+    stream_check_bound(stream, size);
     for (u64 i = stream->offset; i < stream->offset + size; ++i) {
         stream->buf[i] = src[size - (i - stream->offset) - 1];
     }
-    return STREAM_OK;
 }
 
-static StreamResult stream_straight_write_two_bytes(void* stream,
-                                                    const u8* src)
-{
-    return stream_write_straight_bytes((Stream*)stream, src, 2);
-}
-
-static StreamResult stream_reverse_write_two_bytes(void* stream, const u8* src)
-{
-    return stream_write_reverse_bytes((Stream*)stream, src, 2);
-}
-
-static StreamResult stream_straight_write_four_bytes(void* stream,
-                                                     const u8* src)
-{
-    return stream_write_straight_bytes((Stream*)stream, src, 4);
-}
-
-static StreamResult stream_reverse_write_four_bytes(void* stream,
-                                                    const u8* src)
-{
-    return stream_write_reverse_bytes((Stream*)stream, src, 4);
-}
-
-static StreamResult stream_straight_write_eight_bytes(void* stream,
-                                                      const u8* src)
-{
-    return stream_write_straight_bytes((Stream*)stream, src, 8);
-}
-
-static StreamResult stream_reverse_write_eight_bytes(void* stream,
-                                                     const u8* src)
-{
-    return stream_write_reverse_bytes((Stream*)stream, src, 8);
-}
+u64 stream_tell(const Stream* stream) { return stream->offset; }
+u64 stream_size(const Stream* stream) { return stream->size; }
+const u8* stream_raw(const Stream* stream) { return stream->buf; }
