@@ -2,8 +2,8 @@
 
 ## Goals
 
-- [ ] Better type aliases.
-- [ ] Stream
+- [x] Better type aliases.
+- [x] Stream
 - [ ] Arena Allocator
 - [ ] Str
 - [ ] Hash Table

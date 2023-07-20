@@ -1,38 +1,170 @@
+#include <string.h>
+
 #include "nclib/stream.h"
 
-Stream stream_new(void* buf, u64 buf_size, StreamEndian buf_endian)
+#ifdef CHECK_BOUND
+
+#include <stdio.h>
+#include <stdlib.h>
+#undef stream_check_bound
+
+#define stream_check_bound(_stream_, _offset_differance_)                     \
+    if (_stream_->offset + _offset_differance_ > _stream_->size) {            \
+        fprintf(                                                              \
+            stderr,                                                           \
+            "Error: stream access out of bound at %s:%d. Size=%ld, access "   \
+            "by index=%ld.\n",                                                \
+            __FILE__, __LINE__, _stream_->size,                               \
+            _stream_->offset + _offset_differance_);                          \
+        exit(EXIT_FAILURE);                                                   \
+    }
+
+#else
+
+#define stream_check_bound(_stream, _offset_differance_)
+
+#endif // endif !CHECK_BOUND
+
+#define STREAM_READ_GEN(_type_)                                               \
+    _type_ stream_read_##_type_(Stream* stream)                               \
+    {                                                                         \
+        _type_ buf;                                                           \
+        stream->_stream_read_bytes_impl(stream, (u8*)(&buf), sizeof buf);     \
+        return buf;                                                           \
+    }
+
+#define STREAM_WRITE_GEN(_type_)                                              \
+    void stream_write_##_type_(Stream* stream, _type_ buf)                    \
+    {                                                                         \
+        stream->_stream_write_bytes_impl(stream, (u8*)(&buf), sizeof buf);    \
+    }
+
+// PRIVATE METHODS.
+// READ.
+static Stream_read_bytes_type stream_find_read_bytes_impl(StreamEndian endian);
+static inline void stream_read_straight_bytes(Stream* stream, u8* dst,
+                                              u64 size);
+static inline void stream_read_reverse_bytes(Stream* stream, u8* dst,
+                                             u64 size);
+
+// WRITE.
+static Stream_write_bytes_type
+stream_find_write_bytes_impl(StreamEndian endian);
+static inline void stream_write_straight_bytes(Stream* stream, const u8* src,
+                                               u64 size);
+static inline void stream_write_reverse_bytes(Stream* stream, const u8* src,
+                                              u64 size);
+
+// PUBLIC METHODS.
+Stream stream_new(void* buf, u64 buf_size, StreamEndian endian)
 {
     return (Stream) {
         .buf = (u8*)buf,
         .size = buf_size,
         .offset = 0,
-        .endian = buf_endian,
+
+        ._stream_read_bytes_impl = stream_find_read_bytes_impl(endian),
+        ._stream_write_bytes_impl = stream_find_write_bytes_impl(endian),
     };
 }
 
-StreamResult stream_read_u8(Stream* stream, u8* num)
-{
-    if (stream->offset + sizeof *num > stream->size) {
-        return (StreamResult) {
-            .readen = 0,
-            .status = STREAM_OUT_OF_RANGE_ERROR,
-        };
-    }
+STREAM_READ_GEN(u8)
+STREAM_READ_GEN(i8)
+STREAM_READ_GEN(u16)
+STREAM_READ_GEN(i16)
+STREAM_READ_GEN(u32)
+STREAM_READ_GEN(i32)
+STREAM_READ_GEN(u64)
+STREAM_READ_GEN(i64)
+STREAM_READ_GEN(f32)
+STREAM_READ_GEN(f64)
+STREAM_READ_GEN(bool)
 
-    *num = stream->buf[stream->offset];
-    stream->offset += 1;
-    return (StreamResult) { .readen = 1, .status = STREAM_OK };
+void stream_read_bytes(Stream* stream, u8* bytes, u64 size)
+{
+    stream_read_straight_bytes(stream, bytes, size);
 }
-StreamResult stream_read_i8(Stream* stream, i8* num)
+
+STREAM_WRITE_GEN(u8)
+STREAM_WRITE_GEN(i8)
+STREAM_WRITE_GEN(u16)
+STREAM_WRITE_GEN(i16)
+STREAM_WRITE_GEN(u32)
+STREAM_WRITE_GEN(i32)
+STREAM_WRITE_GEN(u64)
+STREAM_WRITE_GEN(i64)
+STREAM_WRITE_GEN(f32)
+STREAM_WRITE_GEN(f64)
+STREAM_WRITE_GEN(bool)
+
+void stream_write_bytes(Stream* stream, const u8* bytes, u64 size)
 {
-    if (stream->offset + sizeof *num > stream->size) {
-        return (StreamResult) {
-            .readen = 0,
-            .status = STREAM_OUT_OF_RANGE_ERROR,
-        };
+    stream_write_straight_bytes(stream, bytes, size);
+}
+
+// PRIVATE METHODS.
+static Stream_read_bytes_type stream_find_read_bytes_impl(StreamEndian endian)
+{
+    return endian == MACHINE_ENDIAN ? stream_read_straight_bytes
+                                    : stream_read_reverse_bytes;
+}
+
+static inline void stream_read_straight_bytes(Stream* stream, u8* dst,
+                                              u64 size)
+{
+    stream_check_bound(stream, size);
+    memcpy(dst, stream->buf + stream->offset, size);
+    stream->offset += size;
+}
+
+static inline void stream_read_reverse_bytes(Stream* stream, u8* dst, u64 size)
+{
+    stream_check_bound(stream, size);
+    for (u64 i = stream->offset; i < stream->offset + size; ++i) {
+        dst[size - (i - stream->offset) - 1] = stream->buf[i];
+    }
+    stream->offset += size;
+}
+
+static Stream_write_bytes_type
+stream_find_write_bytes_impl(StreamEndian endian)
+{
+    return endian == MACHINE_ENDIAN ? stream_write_straight_bytes
+                                    : stream_write_reverse_bytes;
+}
+
+static inline void stream_write_straight_bytes(Stream* stream, const u8* src,
+                                               u64 size)
+{
+    stream_check_bound(stream, size);
+    memcpy(stream->buf + stream->offset, src, size);
+    stream->offset += size;
+}
+
+static inline void stream_write_reverse_bytes(Stream* stream, const u8* src,
+                                              u64 size)
+{
+    stream_check_bound(stream, size);
+    for (u64 i = stream->offset; i < stream->offset + size; ++i) {
+        stream->buf[i] = src[size - (i - stream->offset) - 1];
+    }
+}
+
+u64 stream_tell(const Stream* stream) { return stream->offset; }
+u64 stream_size(const Stream* stream) { return stream->size; }
+const u8* stream_raw(const Stream* stream) { return stream->buf; }
+
+u64 stream_seek(Stream* stream, i64 offset, StreamWhence whence)
+{
+    if (whence == STREAM_START) {
+        stream->offset = offset;
+    }
+    else if (whence == STREAM_CURR) {
+        stream->offset = stream->offset + offset;
+    }
+    else {
+        stream->offset = stream->size - offset;
     }
 
-    *num = (i8)stream->buf[stream->offset];
-    stream->offset += 1;
-    return (StreamResult) { .readen = 1, .status = STREAM_OK };
+    return stream->offset;
 }

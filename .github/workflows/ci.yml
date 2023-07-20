@@ -1,0 +1,90 @@
+name: CI Pipeline for nclib.
+
+on:
+  - push
+  - pull_request
+
+jobs:
+
+  test-linux:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+    - run: pip install meson ninja
+    - run: meson setup -Db_sanitize=address,undefined builddir/
+      env:
+        CC: gcc
+    - run: "meson test nclib: -C builddir/ -v"
+    - uses: actions/upload-artifact@v1
+      if: failure()
+      with:
+        name: Linux_Meson_Testlog
+        path: builddir/meson-logs/testlog.txt
+
+  test-macos:
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+    - run: brew install gcc
+    - run: pip install meson ninja
+    - run: meson setup builddir/
+      env:
+        CC: gcc
+    - run: "meson test nclib: -C builddir/ -v"
+    - uses: actions/upload-artifact@v1
+      if: failure()
+      with:
+        name: MacOS_Meson_Testlog
+        path: builddir/meson-logs/testlog.txt
+
+  test-windows:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+    - run: pip install meson ninja
+    - run: meson setup builddir/
+      env:
+        CC: gcc
+    - run: "meson test nclib: -C builddir/ -v"
+    - uses: actions/upload-artifact@v1
+      if: failure()
+      with:
+        name: Windows_Meson_Testlog
+        path: builddir/meson-logs/testlog.txt
+
+  test-linux_arm:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: uraimo/run-on-arch-action@v2
+        name: Run commands
+        id: runcmd
+        with:
+          arch: armv7
+          distro: ubuntu_latest
+
+          # Not required, but speeds up builds by storing container images in
+          # a GitHub package registry.
+          githubToken: ${{ github.token }}
+
+          setup: |
+            sudo apt-get update -q -y
+            sudo apt-get install -q -y git gcc python3 cmake
+            sudo pip3 install meson ninja
+            git clone https://github.com/NeoTheBestDeveloper/nclib
+            cd nclib 
+            git checkout v0.1.0
+            meson setup build
+            meson test nclib: -C build
+
+          run: |
+            echo "Succes"

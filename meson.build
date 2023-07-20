@@ -4,13 +4,12 @@ project('nclib', 'c',
   license: 'MIT',
   default_options: [
     'warning_level=everything',
-    'c_std=c17',
+    'c_std=c2x',
     'buildtype=debug',
     'optimization=2',
     'b_lundef=false',
     'strip=true',
     'default_library=both',
-    'b_lto=true',
 ])
 
 subdir('src')
@@ -51,6 +50,8 @@ elif target_machine.endian() == 'little'
 else 
   error('Unknown endian!')
 endif
+
+add_project_arguments(cc.get_supported_arguments('-DCHECK_BOUND'), language: 'c')
 
 incdir = include_directories('include')
 nclib = library('nclib', 
