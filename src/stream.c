@@ -56,7 +56,7 @@ static inline void stream_write_reverse_bytes(Stream* stream, const u8* src,
                                               u64 size);
 
 // PUBLIC METHODS.
-Stream stream_new(void* buf, u64 buf_size, StreamEndian endian)
+Stream stream_new(u8* buf, u64 buf_size, StreamEndian endian)
 {
     return (Stream) {
         .buf = (u8*)buf,
@@ -68,12 +68,12 @@ Stream stream_new(void* buf, u64 buf_size, StreamEndian endian)
     };
 }
 
-Stream stream_new_be(void* buf, u64 buf_size)
+Stream stream_new_be(u8* buf, u64 buf_size)
 {
     return stream_new(buf, buf_size, STREAM_BIG_ENDIAN);
 }
 
-Stream stream_new_le(void* buf, u64 buf_size)
+Stream stream_new_le(u8* buf, u64 buf_size)
 {
     return stream_new(buf, buf_size, STREAM_LITTLE_ENDIAN);
 }

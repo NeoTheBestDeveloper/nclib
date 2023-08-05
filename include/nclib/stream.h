@@ -26,10 +26,9 @@ struct Stream {
     Stream_write_bytes_type _stream_write_bytes_impl;
 };
 
-Stream stream_new(void* buf, u64 buf_size, StreamEndian endian);
-
-Stream stream_new_be(void* buf, u64 buf_size);
-Stream stream_new_le(void* buf, u64 buf_size);
+Stream stream_new(u8* buf, u64 buf_size, StreamEndian endian);
+Stream stream_new_be(u8* buf, u64 buf_size);
+Stream stream_new_le(u8* buf, u64 buf_size);
 
 u8 stream_read_u8(Stream* stream);
 i8 stream_read_i8(Stream* stream);

@@ -82,7 +82,7 @@ jobs:
             sudo pip3 install meson ninja
             git clone https://github.com/NeoTheBestDeveloper/nclib
             cd nclib 
-            git checkout v0.1.0
+            git checkout v0.2.0
             meson setup build
             meson test nclib: -C build
 
