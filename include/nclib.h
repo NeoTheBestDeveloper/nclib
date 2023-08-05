@@ -5,5 +5,6 @@
     "little endian"
 #endif // !MACHINE_ENDIAN
 
+#include "nclib/arena.h"
 #include "nclib/stream.h"
 #include "nclib/typedefs.h"

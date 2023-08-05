@@ -12,8 +12,8 @@
     if (_stream_->offset + _offset_differance_ > _stream_->size) {            \
         fprintf(                                                              \
             stderr,                                                           \
-            "Error: stream access out of bound at %s:%d. Size=%ld, access "   \
-            "by index=%ld.\n",                                                \
+            "Error: stream access out of bound at %s:%d. Size=%lu, access "   \
+            "by index=%lu.\n",                                                \
             __FILE__, __LINE__, _stream_->size,                               \
             _stream_->offset + _offset_differance_);                          \
         exit(EXIT_FAILURE);                                                   \

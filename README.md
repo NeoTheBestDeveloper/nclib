@@ -4,6 +4,7 @@
 
 - [x] Better type aliases.
 - [x] Stream
+- [ ] Panic
 - [ ] Arena Allocator
 - [ ] Str
 - [ ] Hash Table
