@@ -28,6 +28,9 @@ struct Stream {
 
 Stream stream_new(void* buf, u64 buf_size, StreamEndian endian);
 
+Stream stream_new_be(void* buf, u64 buf_size);
+Stream stream_new_le(void* buf, u64 buf_size);
+
 u8 stream_read_u8(Stream* stream);
 i8 stream_read_i8(Stream* stream);
 u16 stream_read_u16(Stream* stream);
@@ -54,7 +57,19 @@ void stream_write_f64(Stream* stream, f64 num);
 void stream_write_bool(Stream* stream, bool flag);
 void stream_write_bytes(Stream* stream, const u8* bytes, u64 size);
 
-u64 stream_tell(const Stream* stream);
-u64 stream_size(const Stream* stream);
-const u8* stream_raw(const Stream* stream);
 u64 stream_seek(Stream* stream, i64 offset, StreamWhence whence);
+
+[[maybe_unused]] static inline u64 stream_tell(const Stream* stream)
+{
+    return stream->offset;
+}
+
+[[maybe_unused]] static inline u64 stream_size(const Stream* stream)
+{
+    return stream->size;
+}
+
+[[maybe_unused]] static inline const u8* stream_raw(const Stream* stream)
+{
+    return stream->buf;
+}

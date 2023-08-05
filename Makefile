@@ -1,3 +1,6 @@
+setup:
+	meson setup --wipe build
+
 test:
 	meson test nclib: -C build
 
@@ -17,5 +20,5 @@ clean:
 	rm -rf build build-mingw build-sanitizer
 
 release:
-	meson setup --buildtype=release --reconfigure build_release
-	meson dist -C build_release
+	meson setup --buildtype=release --wipe build_release
+	meson compile -j 8 -C build_release

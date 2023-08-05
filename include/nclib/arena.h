@@ -9,6 +9,11 @@ typedef struct {
 } Arena;
 
 Arena arena_new(u64 size);
+
+// Set pos to zero, don't free memory.
+void arena_clear(Arena*);
+
+// Free memory.
 void arena_free(Arena*);
 
 void* arena_alloc(Arena*, u64 size);

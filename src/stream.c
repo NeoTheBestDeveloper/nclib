@@ -68,6 +68,16 @@ Stream stream_new(void* buf, u64 buf_size, StreamEndian endian)
     };
 }
 
+Stream stream_new_be(void* buf, u64 buf_size)
+{
+    return stream_new(buf, buf_size, STREAM_BIG_ENDIAN);
+}
+
+Stream stream_new_le(void* buf, u64 buf_size)
+{
+    return stream_new(buf, buf_size, STREAM_LITTLE_ENDIAN);
+}
+
 STREAM_READ_GEN(u8)
 STREAM_READ_GEN(i8)
 STREAM_READ_GEN(u16)
@@ -112,8 +122,9 @@ static Stream_read_bytes_type stream_find_read_bytes_impl(StreamEndian endian)
 static inline void stream_read_straight_bytes(Stream* stream, u8* dst,
                                               u64 size)
 {
-    stream_check_bound(stream, size);
-    memcpy(dst, stream->buf + stream->offset, size);
+    stream_check_bound(stream, size)
+
+        memcpy(dst, stream->buf + stream->offset, size);
     stream->offset += size;
 }
 
@@ -150,20 +161,16 @@ static inline void stream_write_reverse_bytes(Stream* stream, const u8* src,
     }
 }
 
-u64 stream_tell(const Stream* stream) { return stream->offset; }
-u64 stream_size(const Stream* stream) { return stream->size; }
-const u8* stream_raw(const Stream* stream) { return stream->buf; }
-
 u64 stream_seek(Stream* stream, i64 offset, StreamWhence whence)
 {
     if (whence == STREAM_START) {
-        stream->offset = offset;
+        stream->offset = (u64)offset;
     }
     else if (whence == STREAM_CURR) {
-        stream->offset = stream->offset + offset;
+        stream->offset = (u64)((i64)stream->offset + offset);
     }
     else {
-        stream->offset = stream->size - offset;
+        stream->offset = (u64)((i64)stream->size - offset);
     }
 
     return stream->offset;

@@ -1,5 +1,5 @@
 project('nclib', 'c',
-  version: '0.1.0',
+  version: '0.2.0',
   meson_version: '>=1.0.0',
   license: 'MIT',
   default_options: [
@@ -38,6 +38,9 @@ warning_flags = [
   '-Wno-missing-declarations',
   '-Wno-declaration-after-statement',
   '-Wno-suggest-attribute=const',
+  '-Wno-c++-compat',
+  '-Wno-extra-semi-stmt',
+  '-Wno-c++98-compat'
 ]
 
 add_project_arguments(cc.get_supported_arguments(warning_flags), language: 'c')
@@ -64,5 +67,7 @@ nclib = declare_dependency(
 	link_with: [libnclib]
 )
 
-libcriterion = subproject('libcriterion')
-subdir('tests')
+if get_option('buildtype') != 'release'
+  libcriterion = subproject('libcriterion')
+  subdir('tests')
+endif
