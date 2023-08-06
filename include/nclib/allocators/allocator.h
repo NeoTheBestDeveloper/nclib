@@ -1,6 +1,6 @@
 #pragma once
 
-#include "nclib.h"
+#include "nclib/typedefs.h"
 
 typedef struct AllocatorI AllocatorI;
 

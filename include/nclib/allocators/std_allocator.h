@@ -1,6 +1,6 @@
 #pragma once
 
-#include "nclib/allocator.h"
+#include "nclib/allocators/allocator.h"
 
 // Adopt standart malloc for AllocatorI interface.
 typedef struct {

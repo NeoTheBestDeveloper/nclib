@@ -1,5 +1,7 @@
-nclib_src = files(
-  'arena.c',
-  'std_allocator.c',
-  'stream.c',
-)
+subdir('allocators')
+subdir('streams')
+
+nclib_src = files()
+
+nclib_src += allocators_src
+nclib_src += streams_src

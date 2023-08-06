@@ -1,6 +1,6 @@
 #include <stdlib.h>
 
-#include "nclib/std_allocator.h"
+#include "nclib/allocators/std_allocator.h"
 
 StdAllocator std_allocator_new()
 {
