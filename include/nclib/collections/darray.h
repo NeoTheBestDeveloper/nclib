@@ -101,6 +101,12 @@ static inline i64 _calculate_positive_idx(i64 idx, i64 size)
         SET_ARR_ELEM(_type_, _arr_, i, tmp);                                  \
     }
 
+#define _DARRAY_RIGHT_SHIFT(_type_, _arr_)                                    \
+    for (i64 i = _arr_->_size - 1; i > 0; ++i) {                              \
+        _type_ tmp = GET_ARR_ELEM(_type_, _arr_, i - 1);                      \
+        SET_ARR_ELEM(_type_, _arr_, i, tmp);                                  \
+    }
+
 #define _gen_darray_pop(_type_)                                               \
     _type_ darray_##_type_##_pop(darray_##_type_* arr)                        \
     {                                                                         \

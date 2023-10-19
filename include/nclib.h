@@ -5,7 +5,6 @@
     "little endian"
 #endif // !MACHINE_ENDIAN
 
-#include "nclib/allocators/allocators.h"
 #include "nclib/collections/collections.h"
 #include "nclib/panic.h"
 #include "nclib/streams/streams.h"
