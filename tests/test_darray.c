@@ -158,4 +158,25 @@ Test(TestDarray, test_darray_push_with_new_allocation)
 
     cr_assert(eq(i64, arr._size, 3));
     cr_assert(eq(i64, arr._capacity, 2 * _CAPACITY_FACTOR));
+
+    darray_i32_free(&arr);
+}
+
+Test(TestDarray, test_darray_pop)
+{
+    darray_i32 arr = darray_i32_new(3);
+    ((i32*)(arr._buf))[0] = 15;
+    ((i32*)(arr._buf))[1] = 27;
+    ((i32*)(arr._buf))[2] = 34;
+
+    cr_assert(eq(i32, darray_i32_pop(&arr), 34));
+    cr_assert(eq(i64, arr._size, 2));
+
+    cr_assert(eq(i32, darray_i32_pop(&arr), 27));
+    cr_assert(eq(i64, arr._size, 1));
+
+    cr_assert(eq(i32, darray_i32_pop(&arr), 15));
+    cr_assert(eq(i64, arr._size, 0));
+
+    darray_i32_free(&arr);
 }
