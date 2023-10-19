@@ -2,12 +2,12 @@
 
 #include "nclib/allocators/allocator.h"
 
-// Adopt standart malloc for AllocatorI interface.
+// Adopt standart malloc for Allocator interface.
 typedef struct {
-    AllocatorI methods;
+    Allocator methods;
 } StdAllocator;
 
-StdAllocator std_allocator_new();
+StdAllocator* std_allocator_new();
 
 // Work as standart malloc.
 void* __attribute__((malloc)) std_allocator_alloc(StdAllocator*, u64 size);

@@ -1,7 +1,9 @@
 subdir('allocators')
+subdir('collections')
 subdir('streams')
 
 nclib_src = files()
 
 nclib_src += allocators_src
+nclib_src += collections_src
 nclib_src += streams_src

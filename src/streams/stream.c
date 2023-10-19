@@ -1,30 +1,12 @@
+#include <stdio.h>
 #include <string.h>
 
+#include "nclib/streams/_streams_check_bound.h"
 #include "nclib/streams/stream.h"
 
-#ifdef CHECK_BOUND
-
-#include <stdio.h>
-#include <stdlib.h>
-
-#undef stream_check_bound
-
-#define stream_check_bound(_stream_, _offset_differance_)                     \
-    if (_stream_->offset + _offset_differance_ > _stream_->size) {            \
-        fprintf(                                                              \
-            stderr,                                                           \
-            "Error: stream access out of bound at %s:%d. Size=%lu, access "   \
-            "by index=%lu.\n",                                                \
-            __FILE__, __LINE__, _stream_->size,                               \
-            _stream_->offset + _offset_differance_);                          \
-        exit(EXIT_FAILURE);                                                   \
-    }
-
-#else
-
-#define stream_check_bound(_stream, _offset_differance_)
-
-#endif // endif !CHECK_BOUND
+/********************************************
+ *              DEFINES START.              *
+ ********************************************/
 
 #define STREAM_READ_GEN(_type_)                                               \
     _type_ stream_read_##_type_(Stream* stream)                               \
@@ -34,23 +16,39 @@
         return buf;                                                           \
     }
 
-// PRIVATE METHODS.
-// READ.
-static Stream_read_bytes_type stream_find_read_bytes_impl(StreamEndian endian);
-static inline void stream_read_straight_bytes(Stream* stream, u8* dst,
-                                              u64 size);
-static inline void stream_read_reverse_bytes(Stream* stream, u8* dst,
-                                             u64 size);
+/********************************************
+ *              DEFINES END.                *
+ ********************************************/
 
-// PUBLIC METHODS.
+/****************************************************************
+ *              PRIVATE METHODS SIGNATURE START.                *
+ ****************************************************************/
+
+static inline stream_read_bytes_fn
+_stream_find_read_bytes_impl(StreamEndian endian);
+static void _stream_read_straight_bytes(Stream* stream, u8* dst, u64 size);
+static void _stream_read_reverse_bytes(Stream* stream, u8* dst, u64 size);
+
+static u64 _stream_new_offset_from_start(i64 offset, u64 stream_size);
+static u64 _stream_new_offset_from_cur(i64 offset, u64 stream_size,
+                                       u64 curr_offset);
+static u64 _stream_new_offset_from_end(i64 offset, u64 stream_size);
+
+/************************************************************
+ *              PRIVATE METHODS SIGNATURE END.              *
+ ************************************************************/
+
+/****************************************************
+ *              PUBLIC METHODS START.               *
+ ****************************************************/
+
 Stream stream_new(const u8* buf, u64 buf_size, StreamEndian endian)
 {
     return (Stream) {
-        .buf = buf,
-        .size = buf_size,
-        .offset = 0,
-
-        ._stream_read_bytes_impl = stream_find_read_bytes_impl(endian),
+        ._buf = buf,
+        ._size = buf_size,
+        ._offset = 0,
+        ._stream_read_bytes_impl = _stream_find_read_bytes_impl(endian),
     };
 }
 
@@ -62,6 +60,27 @@ Stream stream_new_be(const u8* buf, u64 buf_size)
 Stream stream_new_le(const u8* buf, u64 buf_size)
 {
     return stream_new(buf, buf_size, STREAM_LITTLE_ENDIAN);
+}
+
+void stream_read_bytes(Stream* stream, u8* bytes, u64 size)
+{
+    _stream_read_straight_bytes(stream, bytes, size);
+}
+
+u64 stream_seek(Stream* stream, i64 offset, StreamWhence whence)
+{
+    if (whence == STREAM_START) {
+        stream->_offset = _stream_new_offset_from_start(offset, stream->_size);
+    }
+    else if (whence == STREAM_CURR) {
+        stream->_offset = _stream_new_offset_from_cur(offset, stream->_size,
+                                                      stream->_offset);
+    }
+    else {
+        stream->_offset = _stream_new_offset_from_end(offset, stream->_size);
+    }
+
+    return stream->_offset;
 }
 
 STREAM_READ_GEN(u8)
@@ -76,47 +95,94 @@ STREAM_READ_GEN(f32)
 STREAM_READ_GEN(f64)
 STREAM_READ_GEN(bool)
 
-void stream_read_bytes(Stream* stream, u8* bytes, u64 size)
+/****************************************************
+ *              PUBLIC METHODS END.                 *
+ ****************************************************/
+
+/****************************************************
+ *              PRIVATE METHODS START.              *
+ ****************************************************/
+
+static inline stream_read_bytes_fn
+_stream_find_read_bytes_impl(StreamEndian endian)
 {
-    stream_read_straight_bytes(stream, bytes, size);
+    return endian == MACHINE_ENDIAN ? _stream_read_straight_bytes
+                                    : _stream_read_reverse_bytes;
 }
 
-// PRIVATE METHODS.
-static Stream_read_bytes_type stream_find_read_bytes_impl(StreamEndian endian)
+static void _stream_read_straight_bytes(Stream* stream, u8* dst, u64 size)
 {
-    return endian == MACHINE_ENDIAN ? stream_read_straight_bytes
-                                    : stream_read_reverse_bytes;
+    STREAM_CHECK_BOUND(stream, size);
+
+    memcpy(dst, stream->_buf + stream->_offset, size);
+    stream->_offset += size;
 }
 
-static inline void stream_read_straight_bytes(Stream* stream, u8* dst,
-                                              u64 size)
+static void _stream_read_reverse_bytes(Stream* stream, u8* dst, u64 size)
 {
-    stream_check_bound(stream, size)
+    STREAM_CHECK_BOUND(stream, size);
 
-        memcpy(dst, stream->buf + stream->offset, size);
-    stream->offset += size;
-}
-
-static inline void stream_read_reverse_bytes(Stream* stream, u8* dst, u64 size)
-{
-    stream_check_bound(stream, size);
-    for (u64 i = stream->offset; i < stream->offset + size; ++i) {
-        dst[size - (i - stream->offset) - 1] = stream->buf[i];
+    for (u64 i = (u64)stream->_offset; i < (u64)(stream->_offset + size);
+         ++i) {
+        dst[size - (i - stream->_offset) - 1] = stream->_buf[i];
     }
-    stream->offset += size;
+    stream->_offset += size;
 }
 
-u64 stream_seek(Stream* stream, i64 offset, StreamWhence whence)
+static u64 _stream_new_offset_from_start(i64 offset, u64 stream_size)
 {
-    if (whence == STREAM_START) {
-        stream->offset = (u64)offset;
-    }
-    else if (whence == STREAM_CURR) {
-        stream->offset = (u64)((i64)stream->offset + offset);
-    }
-    else {
-        stream->offset = (u64)((i64)stream->size - offset);
+    bool offset_negative = offset < 0;
+
+    if (offset_negative) {
+        return 0;
     }
 
-    return stream->offset;
+    if ((u64)offset > stream_size) {
+        return stream_size;
+    }
+
+    return (u64)offset;
 }
+
+static u64 _stream_new_offset_from_cur(i64 offset, u64 stream_size,
+                                       u64 curr_offset)
+{
+    bool offset_negative = offset < 0;
+
+    if (offset_negative) {
+        u64 offset_value = (u64)-offset;
+
+        if (offset_value > curr_offset) {
+            return 0;
+        }
+
+        return curr_offset - offset_value;
+    }
+
+    u64 offset_value = (u64)offset;
+
+    if (offset_value + curr_offset > stream_size) {
+        return stream_size;
+    }
+
+    return curr_offset + offset_value;
+}
+
+static u64 _stream_new_offset_from_end(i64 offset, u64 stream_size)
+{
+    bool offset_negative = offset < 0;
+
+    if (offset_negative) {
+        return stream_size;
+    }
+
+    if ((u64)offset > stream_size) {
+        return 0;
+    }
+
+    return stream_size - (u64)offset;
+}
+
+/****************************************************
+ *              PRIVATE METHODS END.                *
+ ****************************************************/

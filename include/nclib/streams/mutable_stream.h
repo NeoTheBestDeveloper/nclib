@@ -5,24 +5,20 @@
 #include "stream_whence.h"
 
 typedef struct MutableStream MutableStream;
-typedef void (*MutableStream_read_bytes_type)(MutableStream*, u8*, u64);
-typedef void (*MutableStream_write_bytes_type)(MutableStream*, const u8*, u64);
+typedef void (*mut_stream_read_bytes_fn)(MutableStream*, u8*, u64);
+typedef void (*mut_stream_write_bytes_fn)(MutableStream*, const u8*, u64);
 
 struct MutableStream {
-    u8* buf;
-    u64 size;
-    u64 offset;
+    u8* _buf;
+    u64 _size;
+    u64 _offset;
 
-    MutableStream_read_bytes_type _stream_read_bytes_impl;
-    MutableStream_write_bytes_type _stream_write_bytes_impl;
+    mut_stream_read_bytes_fn _stream_read_bytes_impl;
+    mut_stream_write_bytes_fn _stream_write_bytes_impl;
 };
 
 MutableStream mut_stream_new(u8* buf, u64 buf_size, StreamEndian endian);
-
-// Create mutable stream with Big Endian buffer.
 MutableStream mut_stream_new_be(u8* buf, u64 buf_size);
-
-// Create mutable stream with Big Endian buffer.
 MutableStream mut_stream_new_le(u8* buf, u64 buf_size);
 
 u8 mut_stream_read_u8(MutableStream* stream);
@@ -55,16 +51,16 @@ u64 mut_stream_seek(MutableStream* stream, i64 offset, StreamWhence whence);
 
 [[maybe_unused]] static inline u64 mut_stream_tell(const MutableStream* stream)
 {
-    return stream->offset;
+    return stream->_offset;
 }
 
 [[maybe_unused]] static inline u64 mut_stream_size(const MutableStream* stream)
 {
-    return stream->size;
+    return stream->_size;
 }
 
 [[maybe_unused]] static inline const u8*
 mut_stream_raw(const MutableStream* stream)
 {
-    return stream->buf;
+    return stream->_buf;
 }

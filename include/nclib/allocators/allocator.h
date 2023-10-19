@@ -2,36 +2,36 @@
 
 #include "nclib/typedefs.h"
 
-typedef struct AllocatorI AllocatorI;
+typedef struct Allocator Allocator;
 
-typedef void* (*AllocatorI_alloc_type)(AllocatorI*, u64);
-typedef void (*AllocatorI_resize_type)(AllocatorI*, u64);
-typedef void (*AllocatorI_free_type)(AllocatorI*);
-typedef void (*AllocatorI_free_all_type)(AllocatorI*);
+typedef void* (*Allocator_alloc_type)(Allocator*, u64);
+typedef void (*Allocator_resize_type)(Allocator*, u64);
+typedef void (*Allocator_free_type)(Allocator*);
+typedef void (*Allocator_free_all_type)(Allocator*);
 
-struct AllocatorI {
-    AllocatorI_alloc_type _alloc_impl;
-    AllocatorI_resize_type _resize_impl;
-    AllocatorI_free_type _free_impl;
-    AllocatorI_free_all_type _free_all_impl;
+struct Allocator {
+    Allocator_alloc_type _alloc_impl;
+    Allocator_resize_type _resize_impl;
+    Allocator_free_type _free_impl;
+    Allocator_free_all_type _free_all_impl;
 };
 
-inline void* allocator_alloc(AllocatorI* allocator, u64 size)
+inline void* allocator_alloc(Allocator* allocator, u64 size)
 {
     return allocator->_alloc_impl(allocator, size);
 }
 
-inline void allocator_resize(AllocatorI* allocator, u64 new_size)
+inline void allocator_resize(Allocator* allocator, u64 new_size)
 {
     allocator->_resize_impl(allocator, new_size);
 }
 
-inline void allocator_free(AllocatorI* allocator)
+inline void allocator_free(Allocator* allocator)
 {
     allocator->_free_impl(allocator);
 }
 
-inline void allocator_free_all(AllocatorI* allocator)
+inline void allocator_free_all(Allocator* allocator)
 {
     allocator->_free_all_impl(allocator);
 }
