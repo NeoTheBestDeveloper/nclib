@@ -30,6 +30,12 @@ typedef struct {
         return array;                                                         \
     }
 
+#define _gen_darray_free(_type_)                                              \
+    darray_##_type_ darray_##_type_##_free(darray_##_type_* arr)              \
+    {                                                                         \
+        free(arr->_buf);                                                      \
+    }
+
 #define _gen_darray_new_with_capacity(_type_)                                 \
     darray_##_type_ darray_##_type_##_new_with_capacity(i64 capacity)         \
     {                                                                         \
@@ -75,18 +81,33 @@ typedef struct {
         return ((_type_*)(arr->_buf))[idx];                                   \
     }
 
+#define _gen_darray_push(_type_)                                              \
+    _type_ darray_##_type_##_push(darray_##_type_* arr, _type_ obj)           \
+    {                                                                         \
+        if (arr->_size >= arr->_capacity) {                                   \
+            arr->_buf = realloc(arr->_buf, arr->_size * _CAPACITY_FACTOR);    \
+            arr->_capacity = arr->_size * _CAPACITY_FACTOR;                   \
+        }                                                                     \
+        ((_type_*)(arr->_buf))[arr->_size] = obj;                             \
+        arr->_size += 1;                                                      \
+    }
+
 #define darray_register_type_for_header(_type_)                               \
     typedef _Darray darray_##_type_;                                          \
     darray_##_type_ darray_##_type_##_new(i64 size);                          \
     darray_##_type_ darray_##_type_##_new_with_capacity(i64 capacity);        \
+    darray_##_type_ darray_##_type_##_free(darray_##_type_* arr);             \
                                                                               \
     _gen_darray_size(_type_);                                                 \
     _gen_darray_capacity(_type_);                                             \
     void darray_##_type_##_set(darray_##_type_* arr, i64 idx, _type_ obj);    \
-    _type_ darray_##_type_##_get(const darray_##_type_* arr, i64 idx);
+    _type_ darray_##_type_##_get(const darray_##_type_* arr, i64 idx);        \
+    _type_ darray_##_type_##_push(darray_##_type_* arr, _type_ obj)
 
 #define darray_register_type_for_translation_unit(_type_)                     \
     _gen_darray_new(_type_);                                                  \
     _gen_darray_new_with_capacity(_type_);                                    \
     _gen_darray_set(_type_);                                                  \
-    _gen_darray_get(_type_);
+    _gen_darray_get(_type_);                                                  \
+    _gen_darray_free(_type_);                                                 \
+    _gen_darray_push(_type_);\
