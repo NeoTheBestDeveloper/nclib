@@ -20,3 +20,8 @@ libgit2-cmake.wrap
 build-mingw
 build-mingw_release
 build-sanitizer
+
+## For future
+
+allocators
+allocators.md
