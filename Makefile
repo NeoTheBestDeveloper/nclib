@@ -17,7 +17,7 @@ test-sanitizer:
 	meson test nclib: -C build-sanitizer
 
 clean:
-	rm -rf build build-mingw build-sanitizer
+	rm -rf build build-mingw build-sanitizer build_release .cache
 
 release:
 	meson setup --buildtype=release --wipe build_release

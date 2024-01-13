@@ -1,6 +1,7 @@
-# Library for me wich implement base data structures in C. 
+# Library for me which implement base data structures in C. 
 
 ## Goals
+
 
 - [x] Better type aliases.
 - [x] Stream

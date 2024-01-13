@@ -1,3 +1,0 @@
-collections_src = files(
-
-)
