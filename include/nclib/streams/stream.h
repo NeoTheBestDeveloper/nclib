@@ -5,19 +5,19 @@
 #include "stream_whence.h"
 
 typedef struct Stream Stream;
-typedef void (*stream_read_bytes_fn)(Stream*, u8*, u64);
+typedef void (*StreamReadBytesFn)(Stream*, u8*, u64);
 
 struct Stream {
-    const u8* _buf;
+    u8 const* _buf;
     u64 _size;
     u64 _offset;
 
-    stream_read_bytes_fn _stream_read_bytes_impl;
+    StreamReadBytesFn _read_bytes_impl;
 };
 
-Stream stream_new(const u8* buf, u64 buf_size, StreamEndian endian);
-Stream stream_new_be(const u8* buf, u64 buf_size);
-Stream stream_new_le(const u8* buf, u64 buf_size);
+Stream stream_new(u8 const* buf, u64 size, StreamEndian endian);
+Stream stream_new_be(u8 const* buf, u64 size);
+Stream stream_new_le(u8 const* buf, u64 size);
 
 u8 stream_read_u8(Stream* stream);
 i8 stream_read_i8(Stream* stream);
@@ -34,17 +34,17 @@ void stream_read_bytes(Stream* stream, u8* buf, u64 size);
 
 u64 stream_seek(Stream* stream, i64 offset, StreamWhence whence);
 
-[[maybe_unused]] static inline u64 stream_tell(const Stream* stream)
+[[maybe_unused]] static inline u64 stream_tell(Stream const* stream)
 {
     return stream->_offset;
 }
 
-[[maybe_unused]] static inline u64 stream_size(const Stream* stream)
+[[maybe_unused]] static inline u64 stream_size(Stream const* stream)
 {
     return stream->_size;
 }
 
-[[maybe_unused]] static inline const u8* stream_raw(const Stream* stream)
+[[maybe_unused]] static inline u8 const* stream_raw(Stream const* stream)
 {
     return stream->_buf;
 }

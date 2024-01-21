@@ -1,24 +1,24 @@
 #include <string.h>
 
 #include "nclib/streams/_streams_check_bound.h"
-#include "nclib/streams/mutable_stream.h"
+#include "nclib/streams/mut_stream.h"
 
 /********************************************
  *              DEFINES START.              *
  ********************************************/
 
-#define MUT_STREAM_READ_GEN(_type_)                                           \
-    _type_ mut_stream_read_##_type_(MutableStream* stream)                    \
+#define GEN_READ_METHOD_FOR(_type_)                                           \
+    _type_ mut_stream_read_##_type_(MutStream* stream)                        \
     {                                                                         \
         _type_ buf;                                                           \
-        stream->_stream_read_bytes_impl(stream, (u8*)(&buf), sizeof buf);     \
+        stream->_read_bytes_impl(stream, (u8*)(&buf), sizeof buf);            \
         return buf;                                                           \
     }
 
-#define MUT_STREAM_WRITE_GEN(_type_)                                          \
-    void mut_stream_write_##_type_(MutableStream* stream, _type_ buf)         \
+#define GEN_WRITE_METHOD_FOR(_type_)                                          \
+    void mut_stream_write_##_type_(MutStream* stream, _type_ buf)             \
     {                                                                         \
-        stream->_stream_write_bytes_impl(stream, (u8*)(&buf), sizeof buf);    \
+        stream->_write_bytes_impl(stream, (u8*)(&buf), sizeof buf);           \
     }
 
 /********************************************
@@ -29,19 +29,19 @@
  *              PRIVATE METHODS SIGNATURE START.                *
  ****************************************************************/
 
-static inline mut_stream_read_bytes_fn
+static inline MutStreamReadBytesFn
 _mut_stream_find_read_bytes_impl(StreamEndian endian);
-static void _mut_stream_read_straight_bytes(MutableStream* stream, u8* dst,
+static void _mut_stream_read_straight_bytes(MutStream* stream, u8* dst,
                                             u64 size);
-static void _mut_stream_read_reverse_bytes(MutableStream* stream, u8* dst,
+static void _mut_stream_read_reverse_bytes(MutStream* stream, u8* dst,
                                            u64 size);
 
-static inline mut_stream_write_bytes_fn
+static inline MutStreamWriteBytesFn
 _mut_stream_find_write_bytes_impl(StreamEndian endian);
-static void _mut_stream_write_straight_bytes(MutableStream* stream,
-                                             const u8* src, u64 size);
-static void _mut_stream_write_reverse_bytes(MutableStream* stream,
-                                            const u8* src, u64 size);
+static void _mut_stream_write_straight_bytes(MutStream* stream, const u8* src,
+                                             u64 size);
+static void _mut_stream_write_reverse_bytes(MutStream* stream, const u8* src,
+                                            u64 size);
 
 static u64 _mut_stream_new_offset_from_start(i64 offset, u64 stream_size);
 static u64 _mut_stream_new_offset_from_cur(i64 offset, u64 stream_size,
@@ -55,39 +55,39 @@ static u64 _mut_stream_new_offset_from_end(i64 offset, u64 stream_size);
  *              PUBLIC METHODS START.               *
  ****************************************************/
 
-MutableStream mut_stream_new(u8* buf, u64 buf_size, StreamEndian endian)
+MutStream mut_stream_new(u8* buf, u64 buf_size, StreamEndian endian)
 {
-    return (MutableStream) {
+    return (MutStream) {
         ._buf = buf,
         ._size = buf_size,
         ._offset = 0,
 
-        ._stream_read_bytes_impl = _mut_stream_find_read_bytes_impl(endian),
-        ._stream_write_bytes_impl = _mut_stream_find_write_bytes_impl(endian),
+        ._read_bytes_impl = _mut_stream_find_read_bytes_impl(endian),
+        ._write_bytes_impl = _mut_stream_find_write_bytes_impl(endian),
     };
 }
 
-MutableStream mut_stream_new_be(u8* buf, u64 buf_size)
+MutStream mut_stream_new_be(u8* buf, u64 buf_size)
 {
     return mut_stream_new(buf, buf_size, STREAM_BIG_ENDIAN);
 }
 
-MutableStream mut_stream_new_le(u8* buf, u64 buf_size)
+MutStream mut_stream_new_le(u8* buf, u64 buf_size)
 {
     return mut_stream_new(buf, buf_size, STREAM_LITTLE_ENDIAN);
 }
 
-void mut_stream_read_bytes(MutableStream* stream, u8* bytes, u64 size)
+void mut_stream_read_bytes(MutStream* stream, u8* bytes, u64 size)
 {
     _mut_stream_read_straight_bytes(stream, bytes, size);
 }
 
-void mut_stream_write_bytes(MutableStream* stream, const u8* bytes, u64 size)
+void mut_stream_write_bytes(MutStream* stream, const u8* bytes, u64 size)
 {
     _mut_stream_write_straight_bytes(stream, bytes, size);
 }
 
-u64 mut_stream_seek(MutableStream* stream, i64 offset, StreamWhence whence)
+u64 mut_stream_seek(MutStream* stream, i64 offset, StreamWhence whence)
 {
     if (whence == STREAM_START) {
         stream->_offset
@@ -105,29 +105,29 @@ u64 mut_stream_seek(MutableStream* stream, i64 offset, StreamWhence whence)
     return stream->_offset;
 }
 
-MUT_STREAM_READ_GEN(u8)
-MUT_STREAM_READ_GEN(i8)
-MUT_STREAM_READ_GEN(u16)
-MUT_STREAM_READ_GEN(i16)
-MUT_STREAM_READ_GEN(u32)
-MUT_STREAM_READ_GEN(i32)
-MUT_STREAM_READ_GEN(u64)
-MUT_STREAM_READ_GEN(i64)
-MUT_STREAM_READ_GEN(f32)
-MUT_STREAM_READ_GEN(f64)
-MUT_STREAM_READ_GEN(bool)
+GEN_READ_METHOD_FOR(u8)
+GEN_READ_METHOD_FOR(i8)
+GEN_READ_METHOD_FOR(u16)
+GEN_READ_METHOD_FOR(i16)
+GEN_READ_METHOD_FOR(u32)
+GEN_READ_METHOD_FOR(i32)
+GEN_READ_METHOD_FOR(u64)
+GEN_READ_METHOD_FOR(i64)
+GEN_READ_METHOD_FOR(f32)
+GEN_READ_METHOD_FOR(f64)
+GEN_READ_METHOD_FOR(bool)
 
-MUT_STREAM_WRITE_GEN(u8)
-MUT_STREAM_WRITE_GEN(i8)
-MUT_STREAM_WRITE_GEN(u16)
-MUT_STREAM_WRITE_GEN(i16)
-MUT_STREAM_WRITE_GEN(u32)
-MUT_STREAM_WRITE_GEN(i32)
-MUT_STREAM_WRITE_GEN(u64)
-MUT_STREAM_WRITE_GEN(i64)
-MUT_STREAM_WRITE_GEN(f32)
-MUT_STREAM_WRITE_GEN(f64)
-MUT_STREAM_WRITE_GEN(bool)
+GEN_WRITE_METHOD_FOR(u8)
+GEN_WRITE_METHOD_FOR(i8)
+GEN_WRITE_METHOD_FOR(u16)
+GEN_WRITE_METHOD_FOR(i16)
+GEN_WRITE_METHOD_FOR(u32)
+GEN_WRITE_METHOD_FOR(i32)
+GEN_WRITE_METHOD_FOR(u64)
+GEN_WRITE_METHOD_FOR(i64)
+GEN_WRITE_METHOD_FOR(f32)
+GEN_WRITE_METHOD_FOR(f64)
+GEN_WRITE_METHOD_FOR(bool)
 
 /****************************************************
  *              PUBLIC METHODS END.                 *
@@ -137,14 +137,14 @@ MUT_STREAM_WRITE_GEN(bool)
  *              PRIVATE METHODS START.              *
  ****************************************************/
 
-static inline mut_stream_read_bytes_fn
+static inline MutStreamReadBytesFn
 _mut_stream_find_read_bytes_impl(StreamEndian endian)
 {
     return endian == MACHINE_ENDIAN ? _mut_stream_read_straight_bytes
                                     : _mut_stream_read_reverse_bytes;
 }
 
-static void _mut_stream_read_straight_bytes(MutableStream* stream, u8* dst,
+static void _mut_stream_read_straight_bytes(MutStream* stream, u8* dst,
                                             u64 size)
 {
     STREAM_CHECK_BOUND(stream, size);
@@ -153,7 +153,7 @@ static void _mut_stream_read_straight_bytes(MutableStream* stream, u8* dst,
     stream->_offset += size;
 }
 
-static void _mut_stream_read_reverse_bytes(MutableStream* stream, u8* dst,
+static void _mut_stream_read_reverse_bytes(MutStream* stream, u8* dst,
                                            u64 size)
 {
     STREAM_CHECK_BOUND(stream, size);
@@ -164,15 +164,15 @@ static void _mut_stream_read_reverse_bytes(MutableStream* stream, u8* dst,
     stream->_offset += size;
 }
 
-static inline mut_stream_write_bytes_fn
+static inline MutStreamWriteBytesFn
 _mut_stream_find_write_bytes_impl(StreamEndian endian)
 {
     return endian == MACHINE_ENDIAN ? _mut_stream_write_straight_bytes
                                     : _mut_stream_write_reverse_bytes;
 }
 
-static void _mut_stream_write_straight_bytes(MutableStream* stream,
-                                             const u8* src, u64 size)
+static void _mut_stream_write_straight_bytes(MutStream* stream, const u8* src,
+                                             u64 size)
 {
     STREAM_CHECK_BOUND(stream, size);
 
@@ -180,8 +180,8 @@ static void _mut_stream_write_straight_bytes(MutableStream* stream,
     stream->_offset += size;
 }
 
-static void _mut_stream_write_reverse_bytes(MutableStream* stream,
-                                            const u8* src, u64 size)
+static void _mut_stream_write_reverse_bytes(MutStream* stream, const u8* src,
+                                            u64 size)
 {
     STREAM_CHECK_BOUND(stream, size);
 

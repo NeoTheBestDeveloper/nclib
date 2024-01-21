@@ -8,11 +8,11 @@
  *              DEFINES START.              *
  ********************************************/
 
-#define STREAM_READ_GEN(_type_)                                               \
+#define GEN_READ_METHOD_FOR(_type_)                                           \
     _type_ stream_read_##_type_(Stream* stream)                               \
     {                                                                         \
         _type_ buf;                                                           \
-        stream->_stream_read_bytes_impl(stream, (u8*)(&buf), sizeof buf);     \
+        stream->_read_bytes_impl(stream, (u8*)(&buf), sizeof buf);            \
         return buf;                                                           \
     }
 
@@ -24,7 +24,7 @@
  *              PRIVATE METHODS SIGNATURE START.                *
  ****************************************************************/
 
-static inline stream_read_bytes_fn
+static inline StreamReadBytesFn
 _stream_find_read_bytes_impl(StreamEndian endian);
 static void _stream_read_straight_bytes(Stream* stream, u8* dst, u64 size);
 static void _stream_read_reverse_bytes(Stream* stream, u8* dst, u64 size);
@@ -48,7 +48,7 @@ Stream stream_new(const u8* buf, u64 buf_size, StreamEndian endian)
         ._buf = buf,
         ._size = buf_size,
         ._offset = 0,
-        ._stream_read_bytes_impl = _stream_find_read_bytes_impl(endian),
+        ._read_bytes_impl = _stream_find_read_bytes_impl(endian),
     };
 }
 
@@ -83,17 +83,17 @@ u64 stream_seek(Stream* stream, i64 offset, StreamWhence whence)
     return stream->_offset;
 }
 
-STREAM_READ_GEN(u8)
-STREAM_READ_GEN(i8)
-STREAM_READ_GEN(u16)
-STREAM_READ_GEN(i16)
-STREAM_READ_GEN(u32)
-STREAM_READ_GEN(i32)
-STREAM_READ_GEN(u64)
-STREAM_READ_GEN(i64)
-STREAM_READ_GEN(f32)
-STREAM_READ_GEN(f64)
-STREAM_READ_GEN(bool)
+GEN_READ_METHOD_FOR(u8)
+GEN_READ_METHOD_FOR(i8)
+GEN_READ_METHOD_FOR(u16)
+GEN_READ_METHOD_FOR(i16)
+GEN_READ_METHOD_FOR(u32)
+GEN_READ_METHOD_FOR(i32)
+GEN_READ_METHOD_FOR(u64)
+GEN_READ_METHOD_FOR(i64)
+GEN_READ_METHOD_FOR(f32)
+GEN_READ_METHOD_FOR(f64)
+GEN_READ_METHOD_FOR(bool)
 
 /****************************************************
  *              PUBLIC METHODS END.                 *
@@ -103,7 +103,7 @@ STREAM_READ_GEN(bool)
  *              PRIVATE METHODS START.              *
  ****************************************************/
 
-static inline stream_read_bytes_fn
+static inline StreamReadBytesFn
 _stream_find_read_bytes_impl(StreamEndian endian)
 {
     return endian == MACHINE_ENDIAN ? _stream_read_straight_bytes

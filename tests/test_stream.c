@@ -370,10 +370,8 @@ typedef struct {
 Addr stream_read_addr(Stream* stream)
 {
     Addr res;
-    stream->_stream_read_bytes_impl(stream, (u8*)&(res.page_id),
-                                    sizeof res.page_id);
-    stream->_stream_read_bytes_impl(stream, (u8*)&(res.offset),
-                                    sizeof res.offset);
+    stream->_read_bytes_impl(stream, (u8*)(&res.page_id), sizeof res.page_id);
+    stream->_read_bytes_impl(stream, (u8*)(&res.offset), sizeof res.offset);
     return res;
 }
 
