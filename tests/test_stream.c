@@ -4,7 +4,7 @@
 #include <criterion/new/assert.h>
 
 #include "criterion/internal/new_asserts.h"
-#include "nclib.h"
+#include "nclib/streams/stream.h"
 
 /* be and le payload layout:
  | 1 byte | 2 bytes   | 4 bytes | 8 bytes | ....

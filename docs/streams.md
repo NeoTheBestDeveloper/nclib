@@ -133,3 +133,34 @@ mut_stream_write_u8(&stream, 46); // Rewrite 25 to 46.
 mut_stream_seek(&stream, -1, STREAM_CURR); // Step backward.
 u8 first_number = mut_stream_read_u8(&stream); // first_number=46.
 ```
+
+## How to read/write my own type.
+
+### For Stream
+
+```c 
+typedef struct {
+    i32 page_id;
+    i16 offset;
+} Addr;
+
+Addr stream_read_addr(Stream* stream)
+{
+    Addr res;
+    stream->_read_bytes_impl(stream, (u8*)(&res.page_id), sizeof res.page_id);
+    stream->_read_bytes_impl(stream, (u8*)(&res.offset), sizeof res.offset);
+    return res;
+}
+
+
+// Addr {.page_id = 100, .offset=234}
+u8 le_addr[] = { 0x64, 0x0, 0x0, 0x0, 0xea, 0x0 };
+u8 be_addr[] = { 0x0, 0x0, 0x0, 0x64, 0x0, 0xea };
+
+Stream be_stream = stream_new_be(be_addr, 6);
+Addr addr = stream_read_addr(&be_stream); // addr = {.page_id = 100, .offset=234}
+
+Stream le_stream = stream_new_le(le_addr, 6);
+addr = stream_read_addr(&le_stream); // addr = {.page_id = 100, .offset=234}
+```
+
