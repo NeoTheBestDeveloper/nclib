@@ -137,7 +137,6 @@ u8 first_number = mut_stream_read_u8(&stream); // first_number=46.
 ## How to read/write my own type.
 
 ### For Stream
-
 ```c 
 typedef struct {
     i32 page_id;
@@ -163,4 +162,39 @@ Addr addr = stream_read_addr(&be_stream); // addr = {.page_id = 100, .offset=234
 Stream le_stream = stream_new_le(le_addr, 6);
 addr = stream_read_addr(&le_stream); // addr = {.page_id = 100, .offset=234}
 ```
+### For MutStream 
+```c
+typedef struct {
+    i32 page_id;
+    i16 offset;
+} Addr;
 
+Addr mut_stream_read_addr(MutStream* stream)
+{
+    Addr res;
+    stream->_read_bytes_impl(stream, (u8*)(&res.page_id), sizeof res.page_id);
+    stream->_read_bytes_impl(stream, (u8*)(&res.offset), sizeof res.offset);
+    return res;
+}
+
+void mut_stream_write_addr(MutStream* stream, Addr addr)
+{
+    stream->_write_bytes_impl(stream, (u8*)(&addr.page_id),
+                              sizeof addr.page_id);
+    stream->_write_bytes_impl(stream, (u8*)(&addr.offset), sizeof addr.offset);
+}
+
+// Addr {.page_id = 100, .offset=234}
+u8 le_addr[] = { 0x64, 0x0, 0x0, 0x0, 0xea, 0x0 };
+u8 be_addr[] = { 0x0, 0x0, 0x0, 0x64, 0x0, 0xea };
+
+MutStream be_stream = mut_stream_new_be(be_addr, 6);
+Addr addr = mut_stream_read_addr(&be_stream); // addr = {.page_id = 100, .offset=234}
+
+MutStream le_stream = mut_stream_new_le(le_addr, 6);
+addr = mut_stream_read_addr(&le_stream); // addr = {.page_id = 100, .offset=234}
+
+u8 buf[sizeof le_addr];
+MutStream stream = mut_stream_new(buf, sizeof buf, STREAM_LITTLE_ENDIAN);
+mut_stream_write_addr(&stream, addr); // buf arr will the same like a le_addr arr
+```
