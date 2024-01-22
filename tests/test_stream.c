@@ -3,6 +3,7 @@
 #include <criterion/criterion.h>
 #include <criterion/new/assert.h>
 
+#include "criterion/internal/new_asserts.h"
 #include "nclib.h"
 
 /* be and le payload layout:
@@ -390,4 +391,27 @@ Test(TestStream, test_stream_extend_types)
 
     cr_assert(eq(i32, res.page_id, page_id_expected));
     cr_assert(eq(i16, res.offset, offset_expected));
+}
+
+Test(TestStream, test_stream_documentation_example)
+{
+    u8 data[4] = { 0, 1, 25, 36 };
+    Stream stream = stream_new_le(data, 4);
+
+    bool first_flag = stream_read_bool(&stream); // first_flag=false
+    cr_assert(eq(u8, first_flag, data[0]));
+
+    bool second_flag = stream_read_bool(&stream); // second_flag=true
+    cr_assert(eq(u8, second_flag, data[1]));
+
+    u8 first_number = stream_read_u8(&stream); // first_number=25
+    cr_assert(eq(u8, first_number, 25));
+
+    stream_seek(&stream, 0, STREAM_START); // Start reading from start.
+    first_flag = stream_read_bool(&stream); // first_flag=false
+    cr_assert(eq(u8, first_flag, data[0]));
+
+    stream_seek(&stream, 1, STREAM_END); // Set offset to last byte.
+    u8 second_number = stream_read_u8(&stream); // first_number=25
+    cr_assert(eq(u8, second_number, 36));
 }

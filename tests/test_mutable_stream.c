@@ -677,3 +677,21 @@ Test(TestMutStream, test_stream_extend_types)
     mut_stream_write_addr(&s, res);
     cr_assert_arr_eq(buf, le_addr, sizeof le_addr);
 }
+
+Test(TestMutStream, test_documentation_example)
+{
+    u8 data[4] = { 0, 1, 25, 36 };
+    MutStream stream = mut_stream_new_le(data, 4);
+
+    bool first_flag = mut_stream_read_bool(&stream); // first_flag=false
+    cr_assert(eq(u8, first_flag, data[0]));
+    bool second_flag = mut_stream_read_bool(&stream); // second_flag=true
+    cr_assert(eq(u8, second_flag, data[1]));
+
+    mut_stream_write_u8(&stream, 46); // Rewrite 25 to 46.
+    cr_assert(eq(u8, data[2], 46));
+    mut_stream_seek(&stream, -1, STREAM_CURR); // Step backward.
+
+    u8 first_number = mut_stream_read_u8(&stream); // first_number=46.
+    cr_assert(eq(u8, first_number, data[2]));
+}
