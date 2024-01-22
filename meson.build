@@ -54,7 +54,6 @@ else
   error('Unknown endian!')
 endif
 
-add_project_arguments(cc.get_supported_arguments('-DCHECK_BOUND'), language: 'c')
 
 incdir = include_directories('include')
 libnclib = both_libraries('nclib', 
