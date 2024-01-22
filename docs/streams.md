@@ -8,12 +8,12 @@ reading and writing to file, but using types.
 
 ## Constants 
 
-StreamWhence STREAM_START - mean start of stream.
-StreamWhence STREAM_CURR - mean current position of stream.
-StreamWhence STREAM_END - mean last index of stream.
+- StreamWhence::STREAM_START - mean start of stream.
+- StreamWhence::STREAM_CURR - mean current position of stream.
+- StreamWhence::STREAM_END - mean last index of stream.
 
-StreamEndian STREAM_BIG_ENDIAN - for big endian.
-StreamEndian STREAM_LITTLE_ENDIAN - for little endian.
+- StreamEndian::STREAM_BIG_ENDIAN - for big endian.
+- StreamEndian::STREAM_LITTLE_ENDIAN - for little endian.
 
 ## Stream methods.
 

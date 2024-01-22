@@ -14,8 +14,8 @@
 Set endian for target machine which will execute this library. 
 
 Values:
-"0" - big endian.
-"1" - little endian.
+- "0" - big endian.
+- "1" - little endian.
 
 default: meson choose endian of your machine.
 
